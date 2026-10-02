@@ -3,24 +3,11 @@
     TODDYNHOHUB 2.01 - MM2 Style
     Tema: Dark Roxo 🟣
     ============================================================
-    Novidades:
-    - Watermark
-    - Panic button (desliga tudo)
-    - Keybind system
-    - Save/Load configs
-    - Mini Mapa
-    - Fling, Noclip, Silent Aim, Aimbot
-    - Auto Respawn, Server Hop
-    - Auras e Kill Effect melhorados
-    ============================================================
 ]]
 
 if _G.Toddynho201Loaded then return end
 _G.Toddynho201Loaded = true
 
--- ============================================================
--- SERVIÇOS
--- ============================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -30,9 +17,6 @@ local Stats = game:GetService("Stats")
 local HttpService = game:GetService("HttpService")
 local LP = Players.LocalPlayer
 
--- ============================================================
--- TEMA
--- ============================================================
 local Theme = {
     BG        = Color3.fromRGB(18, 12, 28),
     Surface   = Color3.fromRGB(28, 20, 42),
@@ -47,9 +31,6 @@ local Theme = {
     Yellow    = Color3.fromRGB(255, 215, 80),
 }
 
--- ============================================================
--- HELPERS UI
--- ============================================================
 local function new(class, props, children)
     local obj = Instance.new(class)
     for k, v in pairs(props or {}) do obj[k] = v end
@@ -70,9 +51,6 @@ local function stroke(parent, color, thickness)
     })
 end
 
--- ============================================================
--- ROOT GUI
--- ============================================================
 local ScreenGui = new("ScreenGui", {
     Name = "ToddynhoHub201",
     ResetOnSpawn = false,
@@ -80,16 +58,12 @@ local ScreenGui = new("ScreenGui", {
     Parent = (gethui and gethui()) or game:GetService("CoreGui"),
 })
 
--- ============================================================
--- JANELA (responsiva)
--- ============================================================
 local Window = {}
 Window.Tabs = {}
 Window.ActiveTab = nil
 
 local viewport = workspace.CurrentCamera.ViewportSize
 local isSmall = viewport.X < 700
-
 local winW = isSmall and math.min(viewport.X - 30, 500) or 580
 local winH = isSmall and math.min(viewport.Y - 80, 380) or 400
 local tabW = isSmall and 95 or 130
@@ -153,6 +127,7 @@ local MinBtn = new("TextButton", {
     Parent = TitleBar,
 })
 corner(MinBtn, 6)
+
 local minimized = false
 MinBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -174,6 +149,7 @@ new("UIListLayout", {
     SortOrder = Enum.SortOrder.LayoutOrder,
     Parent = TabBar,
 })
+
 new("UIPadding", {
     PaddingTop = UDim.new(0, 6),
     PaddingLeft = UDim.new(0, 6),
@@ -190,7 +166,6 @@ local Content = new("Frame", {
     Parent = MainFrame,
 })
 
--- Drag da janela
 do
     local dragging, dragStart, startPos
     TitleBar.InputBegan:Connect(function(input)
@@ -217,9 +192,8 @@ do
         end
     end)
 end
-
 -- ============================================================
--- NOTIFICAÇÕES
+-- NOTIFICACOES
 -- ============================================================
 local NotifyHolder = new("Frame", {
     Name = "Notifications",
@@ -280,11 +254,11 @@ function Window:Notify(title, desc, duration)
 end
 
 -- ============================================================
--- WATERMARK (canto superior esquerdo)
+-- WATERMARK
 -- ============================================================
 local Watermark = new("Frame", {
     Name = "Watermark",
-    Size = UDim2.fromOffset(220, 30),
+    Size = UDim2.fromOffset(230, 30),
     Position = UDim2.new(0, 10, 0, 10),
     BackgroundColor3 = Theme.Surface,
     BackgroundTransparency = 0.2,
@@ -294,14 +268,13 @@ local Watermark = new("Frame", {
 corner(Watermark, 8)
 stroke(Watermark, Theme.Accent, 1)
 
-local wmDot = new("Frame", {
+new("Frame", {
     Size = UDim2.fromOffset(8, 8),
     Position = UDim2.new(0, 10, 0.5, -4),
     BackgroundColor3 = Theme.Accent,
     BorderSizePixel = 0,
     Parent = Watermark,
 })
-corner(wmDot, 4)
 
 local wmText = new("TextLabel", {
     Size = UDim2.new(1, -30, 1, 0),
@@ -315,7 +288,8 @@ local wmText = new("TextLabel", {
     Parent = Watermark,
 })
 
--- FPS counter
+corner(Watermark:FindFirstChildOfClass("Frame"), 4)
+
 task.spawn(function()
     local frames, lastUpdate = 0, tick()
     RunService.RenderStepped:Connect(function()
@@ -330,7 +304,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- UI BÁSICA: Tab, Section, Toggle
+-- ADD TAB
 -- ============================================================
 function Window:AddTab(name, icon)
     local btn = new("TextButton", {
@@ -388,6 +362,9 @@ function Window:SelectTab(tab)
     end
 end
 
+-- ============================================================
+-- ADD SECTION
+-- ============================================================
 function Window:AddSection(tab, name)
     local f = new("Frame", {
         Size = UDim2.new(1, 0, 0, 26),
@@ -406,6 +383,9 @@ function Window:AddSection(tab, name)
     })
 end
 
+-- ============================================================
+-- ADD TOGGLE
+-- ============================================================
 function Window:AddToggle(tab, opts)
     local title = opts.Title or "Toggle"
     local default = opts.Default or false
@@ -486,36 +466,6 @@ function Window:AddToggle(tab, opts)
 
     return { Set = set, Get = function() return state end }
 end
-
--- ============================================================
--- CRIA AS ABAS
--- ============================================================
-local CombatTab = Window:AddTab("Combat")
-local LocalTab = Window:AddTab("LocalPlayer")
-local FarmTab = Window:AddTab("AutoFarm")
-local VisualTab = Window:AddTab("Visuals")
-local SettingsTab = Window:AddTab("Settings")
-
--- ============================================================
--- PANIC BUTTON (desliga tudo)
--- ============================================================
-local panicConn = nil
-
-local function panicAll()
-    -- Desliga TODAS as funções
-    for _, con in ipairs(getconnections and {} or {}) do end -- placeholder
-    if _G.ToddynhoPanic then
-        pcall(_G.ToddynhoPanic)
-    end
-    Window:Notify("🚨 PANIC", "Todas as funções desligadas", 3)
-end
-
-UIS.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    if input.KeyCode == Enum.KeyCode.End then
-        panicAll()
-    end
-end)
 -- ============================================================
 -- ADD BUTTON
 -- ============================================================
@@ -693,7 +643,7 @@ function Window:AddDropdown(tab, opts)
         Size = UDim2.fromOffset(20, 20),
         Position = UDim2.new(1, -30, 0, 12),
         BackgroundTransparency = 1,
-        Text = "▼",
+        Text = "v",
         TextColor3 = Theme.TextDim,
         TextSize = 12,
         Font = Enum.Font.GothamBold,
@@ -765,7 +715,6 @@ function Window:AddDropdown(tab, opts)
     refresh(options)
     return { Refresh = refresh }
 end
-
 -- ============================================================
 -- ADD COLOR PICKER
 -- ============================================================
@@ -956,12 +905,10 @@ local function saveConfig()
     end)
     if ok then
         if writefile then
-            pcall(function()
-                writefile(CONFIG_FILE, encoded)
-            end)
-            Window:Notify("Config", "Configurações salvas ✅", 2)
+            pcall(function() writefile(CONFIG_FILE, encoded) end)
+            Window:Notify("Config", "Salvo ✅", 2)
         else
-            Window:Notify("Config", "Executor não suporta writefile", 2)
+            Window:Notify("Config", "Sem suporte a writefile", 2)
         end
     end
 end
@@ -975,20 +922,15 @@ local function loadConfig()
     if not ok then return end
     local ok2, data = pcall(function() return HttpService:JSONDecode(content) end)
     if not ok2 or not data then return end
-
     for key, entry in pairs(data) do
         local reg = ConfigRegistry[key]
         if reg and reg.setter then
             local v = entry.value
-            if entry.__color then
-                v = deserializeColor(entry.__color)
-            end
-            if v ~= nil then
-                pcall(reg.setter, v)
-            end
+            if entry.__color then v = deserializeColor(entry.__color) end
+            if v ~= nil then pcall(reg.setter, v) end
         end
     end
-    Window:Notify("Config", "Configurações carregadas ✅", 2)
+    Window:Notify("Config", "Carregado ✅", 2)
 end
 
 local function registerConfig(key, getter, setter)
@@ -999,7 +941,6 @@ _G.ToddynhoRegisterConfig = registerConfig
 _G.ToddynhoSaveConfig = saveConfig
 _G.ToddynhoLoadConfig = loadConfig
 
--- Autosave a cada 30s
 task.spawn(function()
     while task.wait(30) do
         pcall(saveConfig)
@@ -1007,31 +948,40 @@ task.spawn(function()
 end)
 
 -- ============================================================
+-- CRIA AS ABAS
+-- ============================================================
+local CombatTab = Window:AddTab("Combat")
+local LocalTab = Window:AddTab("LocalPlayer")
+local FarmTab = Window:AddTab("AutoFarm")
+local VisualTab = Window:AddTab("Visuals")
+local SettingsTab = Window:AddTab("Settings")
+
+-- ============================================================
 -- SETTINGS TAB
 -- ============================================================
-Window:AddSection(SettingsTab, "Configurações")
+Window:AddSection(SettingsTab, "Configuracoes")
 
 Window:AddButton(SettingsTab, {
-    Title = "💾 Salvar Config",
+    Title = "Salvar Config",
     Callback = function() saveConfig() end,
 })
 
 Window:AddButton(SettingsTab, {
-    Title = "📂 Carregar Config",
+    Title = "Carregar Config",
     Callback = function() loadConfig() end,
 })
 
 Window:AddButton(SettingsTab, {
-    Title = "🔄 Resetar Config (apaga tudo)",
+    Title = "Resetar Config",
     Callback = function()
         if delfile then
             pcall(function() delfile(CONFIG_FILE) end)
-            Window:Notify("Config", "Config apagado", 2)
+            Window:Notify("Config", "Apagado", 2)
         end
     end,
 })
 
-Window:AddSection(SettingsTab, "Informações")
+Window:AddSection(SettingsTab, "Informacoes")
 
 local InfoLabel = new("TextLabel", {
     Size = UDim2.new(1, 0, 0, 60),
@@ -1045,6 +995,17 @@ local InfoLabel = new("TextLabel", {
     Parent = SettingsTab.Page,
 })
 corner(InfoLabel, 8)
+
+-- ============================================================
+-- PANIC BUTTON (tecla END)
+-- ============================================================
+UIS.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.End then
+        if _G.ToddynhoPanic then pcall(_G.ToddynhoPanic) end
+        Window:Notify("PANIC", "Funcoes desligadas", 3)
+    end
+end)
 -- ============================================================
 -- ROLE TRACKING
 -- ============================================================
@@ -1081,6 +1042,7 @@ end
 if PlayerDataChanged then
     PlayerDataChanged.OnClientEvent:Connect(applyRoleData)
 end
+
 task.spawn(function()
     refreshRoles()
     while task.wait(3) do refreshRoles() end
@@ -1137,7 +1099,7 @@ local function stabPlayer(target)
 end
 
 -- ============================================================
--- COMBAT - MURDER FUNCTIONS
+-- MURDER FUNCTIONS
 -- ============================================================
 Window:AddSection(CombatTab, "Murder Functions")
 
@@ -1145,7 +1107,7 @@ local autoKillAll = false
 
 Window:AddToggle(CombatTab, {
     Title = "Auto Kill All",
-    Description = "Mata todos automaticamente quando você for o Murderer",
+    Description = "Mata todos automaticamente quando Murderer",
     Default = false,
     Callback = function(v) autoKillAll = v end,
 })
@@ -1155,11 +1117,11 @@ Window:AddButton(CombatTab, {
     Description = "Mata todos os jogadores de uma vez",
     Callback = function()
         if not isMurderer() then
-            Window:Notify("Erro", "Você precisa ser o Murderer!", 2)
+            Window:Notify("Erro", "Voce precisa ser o Murderer!", 2)
             return
         end
         if not getKnife() then
-            Window:Notify("Erro", "Faca não encontrada", 2)
+            Window:Notify("Erro", "Faca nao encontrada", 2)
             return
         end
         local count = 0
@@ -1191,15 +1153,15 @@ local killDropdown = Window:AddDropdown(CombatTab, {
         if v == "Nenhum jogador" or v == "Selecione..." then return end
         local plr = Players:FindFirstChild(v)
         if not plr or not plr.Character or not plr.Character:FindFirstChild("Head") then
-            Window:Notify("Erro", "Jogador inválido ou morto", 2)
+            Window:Notify("Erro", "Jogador invalido ou morto", 2)
             return
         end
         if not isMurderer() then
-            Window:Notify("Erro", "Você precisa ser o Murderer!", 2)
+            Window:Notify("Erro", "Voce precisa ser o Murderer!", 2)
             return
         end
         if not getKnife() then
-            Window:Notify("Erro", "Faca não encontrada", 2)
+            Window:Notify("Erro", "Faca nao encontrada", 2)
             return
         end
         if stabPlayer(plr) then
@@ -1214,6 +1176,7 @@ Players.PlayerAdded:Connect(function()
     task.wait(1)
     killDropdown.Refresh(getPlayerList())
 end)
+
 Players.PlayerRemoving:Connect(function()
     task.wait(0.5)
     killDropdown.Refresh(getPlayerList())
@@ -1233,7 +1196,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- COMBAT - AUTO GRAB GUN
+-- INNOCENT FUNCTIONS
 -- ============================================================
 Window:AddSection(CombatTab, "Innocent Functions")
 
@@ -1251,7 +1214,7 @@ end
 
 Window:AddToggle(CombatTab, {
     Title = "Auto Grab Gun",
-    Description = "Vai pegar a arma do Sheriff quando ele morrer",
+    Description = "Pega a arma do Sheriff quando ele morrer",
     Default = false,
     Callback = function(v)
         autoGrabGun = v
@@ -1290,7 +1253,7 @@ Window:AddToggle(CombatTab, {
 })
 
 -- ============================================================
--- COMBAT - AUTO RESPAWN
+-- AUTO RESPAWN
 -- ============================================================
 local autoRespawn = false
 
@@ -1308,200 +1271,11 @@ task.spawn(function()
             local hum = char and char:FindFirstChildOfClass("Humanoid")
             if hum and hum.Health <= 0 then
                 task.wait(0.5)
-                pcall(function()
-                    LP:LoadCharacter()
-                end)
+                pcall(function() LP:LoadCharacter() end)
             end
         end
     end
 end)
-
--- ============================================================
--- COMBAT - FLING
--- ============================================================
-Window:AddSection(CombatTab, "Fling")
-
-local flingActive = false
-local flingTarget = nil
-local flingConn = nil
-
-local function skidFling(target)
-    local plr = target
-    local char = plr.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-
-    if flingConn then flingConn:Disconnect() end
-
-    -- Cria partes pra fling
-    local flingPart = Instance.new("Part")
-    flingPart.Size = Vector3.new(1, 1, 1)
-    flingPart.Transparency = 1
-    flingPart.CanCollide = false
-    flingPart.Anchored = false
-    flingPart.Parent = workspace
-
-    local attachment = Instance.new("Attachment")
-    attachment.Parent = flingPart
-
-    -- BodyVelocity pra "chacoalhar"
-    local bv = Instance.new("BodyVelocity")
-    bv.Velocity = Vector3.new(0, 0, 0)
-    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-    bv.Parent = flingPart
-
-    flingConn = RunService.Heartbeat:Connect(function()
-        if not flingActive or not target.Character then
-            return
-        end
-        local tRoot = target.Character:FindFirstChild("HumanoidRootPart")
-        if not tRoot then return end
-        flingPart.CFrame = tRoot.CFrame
-        bv.Velocity = Vector3.new(
-            math.random(-100000, 100000),
-            math.random(-100000, 100000),
-            math.random(-100000, 100000)
-        )
-    end)
-
-    task.delay(5, function()
-        flingActive = false
-        if flingConn then flingConn:Disconnect() end
-        flingPart:Destroy()
-    end)
-end
-
-local flingDropdown = Window:AddDropdown(CombatTab, {
-    Title = "Fling Target",
-    Description = "Jogador para arremessar",
-    Options = getPlayerList(),
-    Default = "Selecione...",
-    Callback = function(v)
-        if v == "Nenhum jogador" or v == "Selecione..." then return end
-        flingTarget = Players:FindFirstChild(v)
-    end,
-})
-
-Window:AddButton(CombatTab, {
-    Title = "🎯 Fling Selected",
-    Description = "Arremessa o jogador selecionado",
-    Callback = function()
-        if not flingTarget or not flingTarget.Character then
-            Window:Notify("Erro", "Selecione um jogador válido", 2)
-            return
-        end
-        flingActive = true
-        skidFling(flingTarget)
-        Window:Notify("Fling", "Arremessando " .. flingTarget.Name, 2)
-    end,
-})
-
-Players.PlayerAdded:Connect(function()
-    task.wait(1)
-    flingDropdown.Refresh(getPlayerList())
-end)
-Players.PlayerRemoving:Connect(function()
-    task.wait(0.5)
-    flingDropdown.Refresh(getPlayerList())
-end)
-
--- ============================================================
--- COMBAT - NOCLIP
--- ============================================================
-Window:AddSection(CombatTab, "Noclip")
-
-local noclipEnabled = false
-local noclipConn = nil
-
-local function startNoclip()
-    if noclipConn then return end
-    noclipConn = RunService.Stepped:Connect(function()
-        if not noclipEnabled then return end
-        local char = LP.Character
-        if not char then return end
-        for _, part in ipairs(char:GetDescendants()) do
-            if part:IsA("BasePart") and part.CanCollide then
-                pcall(function() part.CanCollide = false end)
-            end
-        end
-    end)
-end
-
-local function stopNoclip()
-    if noclipConn then
-        noclipConn:Disconnect()
-        noclipConn = nil
-    end
-end
-
-Window:AddToggle(CombatTab, {
-    Title = "Noclip",
-    Description = "Atravessa paredes",
-    Default = false,
-    Callback = function(v)
-        noclipEnabled = v
-        if v then startNoclip() else stopNoclip() end
-    end,
-})
-
-Window:AddKeybind(CombatTab, {
-    Title = "Noclip Key",
-    Default = Enum.KeyCode.N,
-    Callback = function()
-        noclipEnabled = not noclipEnabled
-        if noclipEnabled then startNoclip() else stopNoclip() end
-        Window:Notify("Noclip", noclipEnabled and "Ligado" or "Desligado", 1)
-    end,
-})
-
--- ============================================================
--- COMBAT - SERVER HOP
--- ============================================================
-Window:AddSection(CombatTab, "Server Hop")
-
-local function serverHop()
-    local placeId = game.PlaceId
-    local ok, response = pcall(function()
-        return game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100")
-    end)
-
-    if not ok or not response then
-        Window:Notify("Server Hop", "Falha ao buscar servidores", 3)
-        return
-    end
-
-    local data = HttpService:JSONDecode(response)
-    if not data or not data.data then
-        Window:Notify("Server Hop", "Sem servidores disponíveis", 3)
-        return
-    end
-
-    local servers = {}
-    for _, srv in ipairs(data.data) do
-        if srv.playing < srv.maxPlayers and srv.id ~= game.JobId then
-            table.insert(servers, srv.id)
-        end
-    end
-
-    if #servers == 0 then
-        Window:Notify("Server Hop", "Nenhum servidor disponível", 3)
-        return
-    end
-
-    local chosen = servers[math.random(1, #servers)]
-    Window:Notify("Server Hop", "Entrando em outro servidor...", 2)
-
-    task.wait(1)
-    pcall(function()
-        game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, chosen, LP)
-    end)
-end
-
-Window:AddButton(CombatTab, {
-    Title = "🌐 Server Hop",
-    Description = "Troca pra outro servidor aleatório",
-    Callback = serverHop,
-})
 -- ============================================================
 -- SHERIFF FUNCTIONS
 -- ============================================================
@@ -1557,7 +1331,7 @@ end
 
 Window:AddToggle(CombatTab, {
     Title = "Auto Shoot Murderer",
-    Description = "Atira automaticamente no Murderer com predição",
+    Description = "Atira no Murderer com predicao",
     Default = false,
     Callback = function(v) autoShoot = v end,
 })
@@ -1594,9 +1368,7 @@ end
 
 local function restoreGunClient(gun)
     local gc = disabledGunClients[gun]
-    if gc and gc.Parent then
-        gc.Enabled = true
-    end
+    if gc and gc.Parent then gc.Enabled = true end
     disabledGunClients[gun] = nil
 end
 
@@ -1626,16 +1398,14 @@ local function setupMagicGun(gun)
     end)
 end
 
-local gunMonitorConns = {}
 local function monitorGuns()
     local function watch(container)
-        local c = container.ChildAdded:Connect(function(child)
+        container.ChildAdded:Connect(function(child)
             if child.Name == "Gun" and child:IsA("Tool") and magicBulletOn then
                 task.wait(0.1)
                 setupMagicGun(child)
             end
         end)
-        table.insert(gunMonitorConns, c)
         local existing = container:FindFirstChild("Gun")
         if existing and magicBulletOn then
             task.wait(0.1)
@@ -1644,13 +1414,12 @@ local function monitorGuns()
     end
     if LP.Character then watch(LP.Character) end
     if LP.Backpack then watch(LP.Backpack) end
-    local cc = LP.CharacterAdded:Connect(function(char)
+    LP.CharacterAdded:Connect(function(char)
         if not magicBulletOn then return end
         task.wait(1)
         watch(char)
         watch(LP.Backpack)
     end)
-    table.insert(gunMonitorConns, cc)
 end
 
 local function enableMagicBullet()
@@ -1681,15 +1450,15 @@ monitorGuns()
 
 Window:AddToggle(CombatTab, {
     Title = "Magic Bullet",
-    Description = "Atira da posição do Murderer (desabilita GunClient)",
+    Description = "Atira da posicao do Murderer",
     Default = false,
     Callback = function(v)
         if v then
             enableMagicBullet()
-            Window:Notify("Magic Bullet ON", "Atira da posição do alvo 🎯", 2)
+            Window:Notify("Magic Bullet ON", "Atira da posicao do alvo", 2)
         else
             disableMagicBullet()
-            Window:Notify("Magic Bullet OFF", "Comportamento normal restaurado", 2)
+            Window:Notify("Magic Bullet OFF", "Normal restaurado", 2)
         end
     end,
 })
@@ -1700,7 +1469,7 @@ Window:AddToggle(CombatTab, {
 Window:AddSection(CombatTab, "Silent Aim")
 
 local silentAimOn = false
-local silentAimTarget = "Murderer" -- Murderer ou Todos
+local silentAimTarget = "Murderer"
 local silentAimFov = 300
 local silentAimPrediction = 3
 
@@ -1708,19 +1477,16 @@ local function getSilentAimTarget()
     if silentAimTarget == "Murderer" then
         local m = Roles.Murderer
         if m and m.Character then
-            local root = m.Character:FindFirstChild("HumanoidRootPart")
-            if root then return root end
+            return m.Character:FindFirstChild("HumanoidRootPart")
         end
         return nil
     elseif silentAimTarget == "Sheriff" then
         local s = Roles.Sheriff
         if s and s.Character and s ~= LP then
-            local root = s.Character:FindFirstChild("HumanoidRootPart")
-            if root then return root end
+            return s.Character:FindFirstChild("HumanoidRootPart")
         end
         return nil
     elseif silentAimTarget == "Todos" then
-        -- Pega o mais próximo
         local myRoot = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         if not myRoot then return nil end
         local closest, closestDist = nil, math.huge
@@ -1742,52 +1508,36 @@ end
 
 local silentAimConn = nil
 
-local function silentAimHook()
+local function silentAimLoop()
     if silentAimConn then silentAimConn:Disconnect() end
-
     silentAimConn = RunService.RenderStepped:Connect(function()
         if not silentAimOn then return end
         local target = getSilentAimTarget()
         if not target then return end
-
         local cam = workspace.CurrentCamera
         if not cam then return end
-
         local predicted = predictPosition(target, silentAimPrediction)
-        local myRoot = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-        if not myRoot then return end
-
-        -- Ajusta a câmera pra olhar pro alvo
-        local aimPos = CFrame.new(cam.CFrame.Position, predicted)
         cam.CFrame = CFrame.new(cam.CFrame.Position, predicted)
     end)
 end
 
-local function enableSilentAim()
-    silentAimOn = true
-    silentAimHook()
-end
-
-local function disableSilentAim()
-    silentAimOn = false
-    if silentAimConn then
-        silentAimConn:Disconnect()
-        silentAimConn = nil
-    end
-end
-
 Window:AddToggle(CombatTab, {
     Title = "Silent Aim",
-    Description = "Mira automaticamente no alvo (a câmera trava)",
+    Description = "Mira automatica no alvo",
     Default = false,
     Callback = function(v)
-        if v then enableSilentAim() else disableSilentAim() end
+        silentAimOn = v
+        if v then silentAimLoop() end
+        if not v and silentAimConn then
+            silentAimConn:Disconnect()
+            silentAimConn = nil
+        end
     end,
 })
 
 Window:AddDropdown(CombatTab, {
     Title = "Silent Aim Target",
-    Description = "Quem mirar automaticamente",
+    Description = "Quem mirar",
     Options = { "Murderer", "Sheriff", "Todos" },
     Default = "Murderer",
     Callback = function(v) silentAimTarget = v end,
@@ -1804,7 +1554,6 @@ Window:AddSlider(CombatTab, {
     Min = 0, Max = 10, Default = 3,
     Callback = function(v) silentAimPrediction = v end,
 })
-
 -- ============================================================
 -- AIMBOT
 -- ============================================================
@@ -1817,47 +1566,36 @@ local aimbotConn = nil
 
 local function aimbotLoop()
     if aimbotConn then aimbotConn:Disconnect() end
-
     aimbotConn = RunService.RenderStepped:Connect(function()
         if not aimbotOn then return end
         if aimbotUseKey and not UIS:IsKeyDown(aimbotKey) then return end
-
         local target = getSilentAimTarget()
         if not target then return end
-
         local cam = workspace.CurrentCamera
         if not cam then return end
-
         local predicted = predictPosition(target, silentAimPrediction)
         cam.CFrame = CFrame.new(cam.CFrame.Position, predicted)
     end)
 end
 
-local function enableAimbot()
-    aimbotOn = true
-    aimbotLoop()
-end
-
-local function disableAimbot()
-    aimbotOn = false
-    if aimbotConn then
-        aimbotConn:Disconnect()
-        aimbotConn = nil
-    end
-end
-
 Window:AddToggle(CombatTab, {
     Title = "Aimbot",
-    Description = "Trava a mira no alvo (mesma lógica do Silent Aim)",
+    Description = "Trava a mira no alvo",
     Default = false,
     Callback = function(v)
-        if v then enableAimbot() else disableAimbot() end
+        aimbotOn = v
+        if v then
+            aimbotLoop()
+        elseif aimbotConn then
+            aimbotConn:Disconnect()
+            aimbotConn = nil
+        end
     end,
 })
 
 Window:AddToggle(CombatTab, {
     Title = "Aimbot: usar tecla",
-    Description = "Só ativa enquanto a tecla estiver pressionada",
+    Description = "So ativa enquanto a tecla estiver pressionada",
     Default = false,
     Callback = function(v) aimbotUseKey = v end,
 })
@@ -1865,9 +1603,183 @@ Window:AddToggle(CombatTab, {
 Window:AddKeybind(CombatTab, {
     Title = "Aimbot Key",
     Default = Enum.KeyCode.E,
-    Callback = function(k)
-        aimbotKey = k
+    Callback = function(k) aimbotKey = k end,
+})
+
+-- ============================================================
+-- FLING
+-- ============================================================
+Window:AddSection(CombatTab, "Fling")
+
+local flingActive = false
+local flingTarget = nil
+local flingConn = nil
+
+local function skidFling(target)
+    if not target or not target.Character then return end
+    if flingConn then flingConn:Disconnect() end
+
+    local flingPart = Instance.new("Part")
+    flingPart.Size = Vector3.new(1, 1, 1)
+    flingPart.Transparency = 1
+    flingPart.CanCollide = false
+    flingPart.Anchored = false
+    flingPart.Parent = workspace
+
+    local bv = Instance.new("BodyVelocity")
+    bv.Velocity = Vector3.new(0, 0, 0)
+    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bv.Parent = flingPart
+
+    flingConn = RunService.Heartbeat:Connect(function()
+        if not flingActive or not target.Character then return end
+        local tRoot = target.Character:FindFirstChild("HumanoidRootPart")
+        if not tRoot then return end
+        flingPart.CFrame = tRoot.CFrame
+        bv.Velocity = Vector3.new(
+            math.random(-100000, 100000),
+            math.random(-100000, 100000),
+            math.random(-100000, 100000)
+        )
+    end)
+
+    task.delay(5, function()
+        flingActive = false
+        if flingConn then flingConn:Disconnect() end
+        flingPart:Destroy()
+    end)
+end
+
+local flingDropdown = Window:AddDropdown(CombatTab, {
+    Title = "Fling Target",
+    Description = "Jogador para arremessar",
+    Options = getPlayerList(),
+    Default = "Selecione...",
+    Callback = function(v)
+        if v == "Nenhum jogador" or v == "Selecione..." then return end
+        flingTarget = Players:FindFirstChild(v)
     end,
+})
+
+Window:AddButton(CombatTab, {
+    Title = "Fling Selected",
+    Description = "Arremessa o jogador selecionado",
+    Callback = function()
+        if not flingTarget or not flingTarget.Character then
+            Window:Notify("Erro", "Selecione um jogador valido", 2)
+            return
+        end
+        flingActive = true
+        skidFling(flingTarget)
+        Window:Notify("Fling", "Arremessando " .. flingTarget.Name, 2)
+    end,
+})
+
+Players.PlayerAdded:Connect(function()
+    task.wait(1)
+    flingDropdown.Refresh(getPlayerList())
+end)
+
+Players.PlayerRemoving:Connect(function()
+    task.wait(0.5)
+    flingDropdown.Refresh(getPlayerList())
+end)
+
+-- ============================================================
+-- NOCLIP
+-- ============================================================
+Window:AddSection(CombatTab, "Noclip")
+
+local noclipEnabled = false
+local noclipConn = nil
+
+local function startNoclip()
+    if noclipConn then return end
+    noclipConn = RunService.Stepped:Connect(function()
+        if not noclipEnabled then return end
+        local char = LP.Character
+        if not char then return end
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                pcall(function() part.CanCollide = false end)
+            end
+        end
+    end)
+end
+
+local function stopNoclip()
+    if noclipConn then
+        noclipConn:Disconnect()
+        noclipConn = nil
+    end
+end
+
+Window:AddToggle(CombatTab, {
+    Title = "Noclip",
+    Description = "Atravessa paredes",
+    Default = false,
+    Callback = function(v)
+        noclipEnabled = v
+        if v then startNoclip() else stopNoclip() end
+    end,
+})
+
+Window:AddKeybind(CombatTab, {
+    Title = "Noclip Key",
+    Default = Enum.KeyCode.N,
+    Callback = function()
+        noclipEnabled = not noclipEnabled
+        if noclipEnabled then startNoclip() else stopNoclip() end
+        Window:Notify("Noclip", noclipEnabled and "Ligado" or "Desligado", 1)
+    end,
+})
+
+-- ============================================================
+-- SERVER HOP
+-- ============================================================
+Window:AddSection(CombatTab, "Server Hop")
+
+local function serverHop()
+    local placeId = game.PlaceId
+    local ok, response = pcall(function()
+        return game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100")
+    end)
+
+    if not ok or not response then
+        Window:Notify("Server Hop", "Falha ao buscar servidores", 3)
+        return
+    end
+
+    local ok2, data = pcall(function() return HttpService:JSONDecode(response) end)
+    if not ok2 or not data or not data.data then
+        Window:Notify("Server Hop", "Sem servidores disponiveis", 3)
+        return
+    end
+
+    local servers = {}
+    for _, srv in ipairs(data.data) do
+        if srv.playing < srv.maxPlayers and srv.id ~= game.JobId then
+            table.insert(servers, srv.id)
+        end
+    end
+
+    if #servers == 0 then
+        Window:Notify("Server Hop", "Nenhum servidor disponivel", 3)
+        return
+    end
+
+    local chosen = servers[math.random(1, #servers)]
+    Window:Notify("Server Hop", "Entrando em outro servidor...", 2)
+    task.wait(1)
+    pcall(function()
+        game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, chosen, LP)
+    end)
+end
+
+Window:AddButton(CombatTab, {
+    Title = "Server Hop",
+    Description = "Troca pra outro servidor aleatorio",
+    Callback = serverHop,
 })
 
 -- ============================================================
@@ -1928,7 +1840,7 @@ end
 
 Window:AddToggle(CombatTab, {
     Title = "Show Prediction Beam",
-    Description = "Mostra uma linha até a posição prevista do alvo",
+    Description = "Linha ate a posicao prevista do alvo",
     Default = false,
     Callback = function(v)
         showPrediction = v
@@ -1956,7 +1868,6 @@ Window:AddToggle(CombatTab, {
 Window:AddSection(LocalTab, "Anti-Fling")
 
 local antiFlingOn = false
-local antiFlingConns = {}
 
 local function setupAntiFling(char)
     if not char then return end
@@ -1982,8 +1893,6 @@ local function setupAntiFling(char)
         c1:Disconnect()
         c2:Disconnect()
     end)
-    table.insert(antiFlingConns, c1)
-    table.insert(antiFlingConns, c2)
 end
 
 local function trackPlayerAF(plr)
@@ -2014,7 +1923,7 @@ Window:AddToggle(LocalTab, {
 })
 
 -- ============================================================
--- LOCALPLAYER - VOID HIDE
+-- VOID HIDE
 -- ============================================================
 Window:AddSection(LocalTab, "Void Hide")
 
@@ -2035,7 +1944,7 @@ local lastVoid = tick()
 local currentVoidPos = nil
 local inVoid = false
 local oldIndex, oldNewIndex
-local connection = nil
+local voidConn = nil
 
 local function randomLarge(min, max)
     local range = max - min
@@ -2111,8 +2020,8 @@ local function enableVoidHide()
     local char = LP.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if root then spoofed[root] = {} end
-    if not connection then
-        connection = RunService.Heartbeat:Connect(function()
+    if not voidConn then
+        voidConn = RunService.Heartbeat:Connect(function()
             local c = LP.Character
             local r = c and c:FindFirstChild("HumanoidRootPart")
             if not r or not r.Parent then
@@ -2129,9 +2038,9 @@ local function enableVoidHide()
 end
 
 local function disableVoidHide()
-    if connection then
-        connection:Disconnect()
-        connection = nil
+    if voidConn then
+        voidConn:Disconnect()
+        voidConn = nil
     end
     inVoid = false
     currentVoidPos = nil
@@ -2142,16 +2051,16 @@ end
 
 Window:AddToggle(LocalTab, {
     Title = "Void Hide",
-    Description = "Servidor te vê no void, seu client vê normal",
+    Description = "Servidor te ve no void",
     Default = false,
     Callback = function(v)
         VoidHide.Enabled = v
         if v then
             enableVoidHide()
-            Window:Notify("Void Hide ON", "Invisível para o servidor 👻", 3)
+            Window:Notify("Void Hide ON", "Invisivel pro servidor", 3)
         else
             disableVoidHide()
-            Window:Notify("Void Hide OFF", "Posição normal restaurada", 2)
+            Window:Notify("Void Hide OFF", "Posicao normal", 2)
         end
     end,
 })
@@ -2161,78 +2070,9 @@ LP.CharacterAdded:Connect(function(char)
     local root = char:WaitForChild("HumanoidRootPart", 5)
     if root and VoidHide.Enabled then
         spoofed[root] = {}
-        if connection then connection:Disconnect() end
-        connection = nil
+        if voidConn then voidConn:Disconnect() end
+        voidConn = nil
         enableVoidHide()
-    end
-end)
-
-local showVoidMarker = false
-local markerPart, markerHighlight, tracerGui, tracerImage
-
-local function createVoidMarker()
-    if markerPart then markerPart:Destroy() end
-    if tracerGui then tracerGui:Destroy() end
-    markerPart = nil; markerHighlight = nil; tracerGui = nil; tracerImage = nil
-    if not showVoidMarker then return end
-
-    markerPart = Instance.new("Part")
-    markerPart.Name = "VoidMarker"
-    markerPart.Size = Vector3.new(3, 6, 3)
-    markerPart.Anchored = true
-    markerPart.CanCollide = false
-    markerPart.Transparency = 0.7
-    markerPart.Color = Theme.Accent
-    markerPart.Material = Enum.Material.Neon
-    markerPart.Parent = workspace
-
-    markerHighlight = Instance.new("Highlight")
-    markerHighlight.FillColor = Theme.Accent
-    markerHighlight.FillTransparency = 0.5
-    markerHighlight.OutlineColor = Color3.fromRGB(255, 255, 0)
-    markerHighlight.Adornee = markerPart
-    markerHighlight.Parent = markerPart
-
-    tracerGui = Instance.new("ScreenGui")
-    tracerGui.Name = "VoidTracer"
-    tracerGui.ResetOnSpawn = false
-    tracerGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
-
-    tracerImage = Instance.new("ImageLabel")
-    tracerImage.Size = UDim2.fromOffset(64, 64)
-    tracerImage.BackgroundTransparency = 1
-    tracerImage.Image = "rbxassetid://116203675006105"
-    tracerImage.Parent = tracerGui
-end
-
-Window:AddToggle(LocalTab, {
-    Title = "Show VoidHide Position",
-    Description = "Mostra onde o servidor te vê",
-    Default = false,
-    Callback = function(v)
-        showVoidMarker = v
-        if v then
-            createVoidMarker()
-        else
-            if markerPart then markerPart:Destroy() markerPart = nil end
-            if tracerGui then tracerGui:Destroy() tracerGui = nil tracerImage = nil end
-            if markerHighlight then markerHighlight:Destroy() markerHighlight = nil end
-        end
-    end,
-})
-
-RunService.Heartbeat:Connect(function()
-    if not showVoidMarker or not markerPart or not tracerImage then return end
-    if not currentVoidPos then tracerImage.Visible = false return end
-    markerPart.CFrame = currentVoidPos
-    local cam = workspace.CurrentCamera
-    local sp, onScreen = cam:WorldToViewportPoint(currentVoidPos.Position)
-    if onScreen then
-        local half = 32
-        tracerImage.Position = UDim2.new(0, sp.X - half, 0, sp.Y - half)
-        tracerImage.Visible = true
-    else
-        tracerImage.Visible = false
     end
 end)
 
@@ -2252,9 +2092,9 @@ local function applyWalkSpeed()
     if hum then pcall(function() hum.WalkSpeed = wsValue end) end
 end
 
-local wsToggle = Window:AddToggle(LocalTab, {
+Window:AddToggle(LocalTab, {
     Title = "Custom WalkSpeed",
-    Description = "Velocidade de caminhada personalizada",
+    Description = "Velocidade personalizada",
     Default = false,
     Callback = function(v)
         wsEnabled = v
@@ -2266,7 +2106,7 @@ local wsToggle = Window:AddToggle(LocalTab, {
     end,
 })
 
-local wsSlider = Window:AddSlider(LocalTab, {
+Window:AddSlider(LocalTab, {
     Title = "WalkSpeed Value",
     Min = 16, Max = 200, Default = 16,
     Callback = function(v)
@@ -2291,9 +2131,9 @@ local function applyJumpPower()
     end
 end
 
-local jpToggle = Window:AddToggle(LocalTab, {
+Window:AddToggle(LocalTab, {
     Title = "Custom JumpPower",
-    Description = "Força de pulo personalizada",
+    Description = "Forca de pulo personalizada",
     Default = false,
     Callback = function(v)
         jpEnabled = v
@@ -2308,7 +2148,7 @@ local jpToggle = Window:AddToggle(LocalTab, {
     end,
 })
 
-local jpSlider = Window:AddSlider(LocalTab, {
+Window:AddSlider(LocalTab, {
     Title = "JumpPower Value",
     Min = 50, Max = 250, Default = 50,
     Callback = function(v)
@@ -2326,9 +2166,9 @@ local function applyFOV()
     if cam then cam.FieldOfView = fovValue end
 end
 
-local fovToggle = Window:AddToggle(LocalTab, {
+Window:AddToggle(LocalTab, {
     Title = "Custom FOV",
-    Description = "Campo de visão personalizado",
+    Description = "Campo de visao personalizado",
     Default = false,
     Callback = function(v)
         fovEnabled = v
@@ -2340,7 +2180,7 @@ local fovToggle = Window:AddToggle(LocalTab, {
     end,
 })
 
-local fovSlider = Window:AddSlider(LocalTab, {
+Window:AddSlider(LocalTab, {
     Title = "FOV Value",
     Min = 70, Max = 120, Default = 70,
     Callback = function(v)
@@ -2363,14 +2203,6 @@ LP.CharacterAdded:Connect(function()
     if jpEnabled then applyJumpPower() end
     if fovEnabled then applyFOV() end
 end)
-
--- Registra pra save/load
-if _G.ToddynhoRegisterConfig then
-    _G.ToddynhoRegisterConfig("wsValue", function() return wsValue end, function(v) wsSlider.Set(v) end)
-    _G.ToddynhoRegisterConfig("jpValue", function() return jpValue end, function(v) jpSlider.Set(v) end)
-    _G.ToddynhoRegisterConfig("fovValue", function() return fovValue end, function(v) fovSlider.Set(v) end)
-end
-
 -- ============================================================
 -- VISUALS - AURAS MELHORADAS
 -- ============================================================
@@ -2424,9 +2256,6 @@ local function applyAuraOverrides(part)
     elseif part:IsA("BasePart") then
         pcall(function() part.Transparency = auraTransparency end)
     end
-    if part:IsA("ParticleEmitter") then
-        pcall(function() part.Size = NumberSequence.new(auraSize) end)
-    end
 end
 
 local function createAura(char)
@@ -2460,7 +2289,7 @@ end
 
 Window:AddToggle(VisualTab, {
     Title = "Character Aura",
-    Description = "Ativa efeitos de aura no personagem",
+    Description = "Ativa efeitos de aura",
     Default = false,
     Callback = function(v)
         auraEnabled = v
@@ -2514,6 +2343,7 @@ LP.CharacterAdded:Connect(function(char)
     task.wait(1)
     if auraEnabled then createAura(char) end
 end)
+
 -- ============================================================
 -- VISUALS - KILL EFFECT MELHORADO
 -- ============================================================
@@ -2521,16 +2351,16 @@ Window:AddSection(VisualTab, "Kill Effect")
 
 local killEffectEnabled = false
 local killEffectColor = Color3.fromRGB(160, 80, 255)
-local killEffectType = "Neon" -- Neon, Fogo, Gelo, Raio, Ouro
+local killEffectType = "Neon"
 local killEffectParticles = false
 local killEffectConns = {}
 
 local EFFECT_PRESETS = {
-    Neon  = { material = Enum.Material.Neon, particles = nil },
-    Fogo  = { material = Enum.Material.Neon, particles = "Fire", color = Color3.fromRGB(255, 100, 0) },
-    Gelo  = { material = Enum.Material.Ice,  particles = nil, color = Color3.fromRGB(150, 220, 255) },
-    Raio  = { material = Enum.Material.Neon, particles = "Sparkles", color = Color3.fromRGB(255, 255, 100) },
-    Ouro  = { material = Enum.Material.Neon, particles = "Sparkles", color = Color3.fromRGB(255, 215, 0) },
+    Neon = { material = Enum.Material.Neon },
+    Fogo = { material = Enum.Material.Neon, particles = "Fire", color = Color3.fromRGB(255, 100, 0) },
+    Gelo = { material = Enum.Material.Ice, color = Color3.fromRGB(150, 220, 255) },
+    Raio = { material = Enum.Material.Neon, particles = "Sparkles", color = Color3.fromRGB(255, 255, 100) },
+    Ouro = { material = Enum.Material.Neon, particles = "Sparkles", color = Color3.fromRGB(255, 215, 0) },
 }
 
 local function addParticleTo(part, kind, color)
@@ -2682,7 +2512,7 @@ end
 
 Window:AddToggle(VisualTab, {
     Title = "Kill Effect",
-    Description = "Congela o corpo dos jogadores que você matar",
+    Description = "Congela o corpo dos jogadores que voce matar",
     Default = false,
     Callback = function(v)
         killEffectEnabled = v
@@ -2700,14 +2530,14 @@ Window:AddDropdown(VisualTab, {
 
 Window:AddToggle(VisualTab, {
     Title = "Kill Effect Particles",
-    Description = "Adiciona partículas (fogo/brilho)",
+    Description = "Adiciona particulas (fogo/brilho)",
     Default = false,
     Callback = function(v) killEffectParticles = v end,
 })
 
 Window:AddColorPicker(VisualTab, {
     Title = "Kill Effect Color",
-    Description = "Cor do efeito (só quando Type = Neon)",
+    Description = "Cor do efeito (Neon)",
     Default = Color3.fromRGB(160, 80, 255),
     Callback = function(c) killEffectColor = c end,
 })
@@ -2715,7 +2545,6 @@ Window:AddColorPicker(VisualTab, {
 Players.PlayerAdded:Connect(function(plr)
     if killEffectEnabled then setupKillEffectFor(plr) end
 end)
-
 -- ============================================================
 -- VISUALS - ESP MELHORADO
 -- ============================================================
@@ -2767,9 +2596,7 @@ end
 
 local function getColorFor(plr)
     local role = getRoleOf(plr)
-    if role and ROLE_COLORS[role] then
-        return ROLE_COLORS[role], role
-    end
+    if role and ROLE_COLORS[role] then return ROLE_COLORS[role], role end
     return DEFAULT_COLOR, "?"
 end
 
@@ -2781,7 +2608,6 @@ local function createESP(plr)
     ensureHolder()
 
     local data = {}
-
     data.Box = Drawing.new("Square")
     data.Box.Thickness = 1
     data.Box.Filled = false
@@ -2830,6 +2656,14 @@ local function createESP(plr)
     data.Distance.Font = 2
     data.Distance.Visible = false
 
+    data.Health = Drawing.new("Text")
+    data.Health.Size = 12
+    data.Health.Center = true
+    data.Health.Outline = true
+    data.Health.OutlineColor = Color3.new(0, 0, 0)
+    data.Health.Font = 2
+    data.Health.Visible = false
+
     data.Tracer = Drawing.new("Line")
     data.Tracer.Thickness = 1
     data.Tracer.Transparency = 1
@@ -2877,10 +2711,7 @@ local function updateESP()
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-        local shouldShow = ESP.Enabled
-            and char and hrp and hum
-            and hum.Health > 0
-            and plr ~= LP
+        local shouldShow = ESP.Enabled and char and hrp and hum and hum.Health > 0 and plr ~= LP
 
         if shouldShow and ESP.TeamCheck then
             local myRole = getRoleOf(LP)
@@ -2903,19 +2734,11 @@ local function updateESP()
         local color, roleName = getColorFor(plr)
 
         if data.Highlight then
-            if ESP.ShowChams then
-                data.Highlight.Enabled = true
-                data.Highlight.OutlineColor = color
-                data.Highlight.FillColor = color
-                data.Highlight.FillTransparency = 0.5
-                data.Highlight.Adornee = char
-            else
-                data.Highlight.Enabled = true
-                data.Highlight.OutlineColor = color
-                data.Highlight.FillColor = color
-                data.Highlight.FillTransparency = 1
-                data.Highlight.Adornee = char
-            end
+            data.Highlight.Enabled = true
+            data.Highlight.OutlineColor = color
+            data.Highlight.FillColor = color
+            data.Highlight.FillTransparency = ESP.ShowChams and 0.5 or 1
+            data.Highlight.Adornee = char
         end
 
         local head = char:FindFirstChild("Head")
@@ -2935,7 +2758,6 @@ local function updateESP()
         local boxTop = topPos.Y
         local boxBottom = bottomPos.Y
 
-        -- Box outline
         data.BoxOutline.Visible = ESP.ShowBox
         data.BoxOutline.Size = Vector2.new(width + 2, height + 2)
         data.BoxOutline.Position = Vector2.new(centerX - width / 2 - 1, boxTop - 1)
@@ -2945,7 +2767,6 @@ local function updateESP()
         data.Box.Size = Vector2.new(width, height)
         data.Box.Position = Vector2.new(centerX - width / 2, boxTop)
 
-        -- Health bar (à esquerda do box)
         if ESP.ShowHealthBar then
             local hpPct = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
             local barW = 3
@@ -2983,7 +2804,7 @@ local function updateESP()
             data.Health.Color = color
             data.Health.Text = string.format("HP: %d", math.floor(hum.Health))
             data.Health.Position = Vector2.new(centerX, boxBottom + 18)
-        elseif data.Health then
+        else
             data.Health.Visible = false
         end
 
@@ -3017,7 +2838,7 @@ Players.PlayerRemoving:Connect(destroyESP)
 
 Window:AddToggle(VisualTab, {
     Title = "ESP Enabled",
-    Description = "Mostra jogadores através das paredes",
+    Description = "Mostra jogadores atraves das paredes",
     Default = false,
     Callback = function(v)
         ESP.Enabled = v
@@ -3050,14 +2871,14 @@ Window:AddToggle(VisualTab, {
 
 Window:AddToggle(VisualTab, {
     Title = "ESP: Role",
-    Description = "Role (Murderer/Sheriff/Innocent/Hero)",
+    Description = "Role do jogador",
     Default = true,
     Callback = function(v) ESP.ShowRole = v end,
 })
 
 Window:AddToggle(VisualTab, {
     Title = "ESP: Distance",
-    Description = "Distância em metros",
+    Description = "Distancia em metros",
     Default = true,
     Callback = function(v) ESP.ShowDistance = v end,
 })
@@ -3071,7 +2892,7 @@ Window:AddToggle(VisualTab, {
 
 Window:AddToggle(VisualTab, {
     Title = "ESP: Tracer",
-    Description = "Linha da sua mira até o jogador",
+    Description = "Linha ate o jogador",
     Default = false,
     Callback = function(v) ESP.ShowTracer = v end,
 })
@@ -3085,7 +2906,7 @@ Window:AddToggle(VisualTab, {
 
 Window:AddToggle(VisualTab, {
     Title = "ESP: Team Check",
-    Description = "Esconde jogadores do mesmo 'time'",
+    Description = "Esconde jogadores do mesmo time",
     Default = false,
     Callback = function(v) ESP.TeamCheck = v end,
 })
@@ -3103,29 +2924,146 @@ Window:AddSlider(VisualTab, {
 })
 
 RunService.RenderStepped:Connect(function()
-    if ESP.Enabled then
-        pcall(updateESP)
-    end
+    if ESP.Enabled then pcall(updateESP) end
 end)
 
 -- ============================================================
--- VISUALS - MINI MAPA
+-- MINI MAPA
 -- ============================================================
 Window:AddSection(VisualTab, "Mini Mapa")
 
 local minimapEnabled = false
 local minimapSize = 200
-local minimapRange = 500 -- studs mostrados
+local minimapRange = 500
 local minimapFrame = nil
 local minimapDots = {}
 
 local function createMinimap()
     if minimapFrame then minimapFrame:Destroy() end
-
     minimapFrame = new("Frame", {
         Name = "Minimap",
         Size = UDim2.fromOffset(minimapSize, minimapSize),
-        Position = UDim2.new(1, -minimapSize - 1
+        Position = UDim2.new(1, -minimapSize - 15, 0, 60),
+        BackgroundColor3 = Theme.BG,
+        BackgroundTransparency = 0.3,
+        BorderSizePixel = 0,
+        Parent = ScreenGui,
+    })
+    corner(minimapFrame, 8)
+    stroke(minimapFrame, Theme.Accent, 2)
+
+    new("TextLabel", {
+        Size = UDim2.new(1, 0, 0, 20),
+        Position = UDim2.fromOffset(0, 0),
+        BackgroundTransparency = 1,
+        Text = "MAPA",
+        TextColor3 = Theme.Accent,
+        TextSize = 11,
+        Font = Enum.Font.GothamBold,
+        Parent = minimapFrame,
+    })
+
+    local center = new("Frame", {
+        Size = UDim2.fromOffset(8, 8),
+        Position = UDim2.new(0.5, -4, 0.5, -4),
+        BackgroundColor3 = Theme.Accent,
+        BorderSizePixel = 0,
+        ZIndex = 5,
+        Parent = minimapFrame,
+    })
+    corner(center, 4)
+end
+
+local function getOrCreateDot(plr)
+    if minimapDots[plr] then return minimapDots[plr] end
+    if not minimapFrame then return nil end
+    local dot = new("Frame", {
+        Size = UDim2.fromOffset(10, 10),
+        BackgroundColor3 = DEFAULT_COLOR,
+        BorderSizePixel = 0,
+        ZIndex = 4,
+        Parent = minimapFrame,
+    })
+    corner(dot, 5)
+    minimapDots[plr] = dot
+    return dot
+end
+
+local function updateMinimap()
+    if not minimapFrame then return end
+    local myRoot = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+    local centerPos = myRoot.Position
+    local myLook = myRoot.CFrame.LookVector
+    local halfSize = minimapSize / 2
+
+    for plr, dot in pairs(minimapDots) do
+        local char = plr.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp or plr == LP then
+            dot.Visible = false
+        else
+            local rel = hrp.Position - centerPos
+            local dist = rel.Magnitude
+            if dist > minimapRange then
+                dot.Visible = false
+            else
+                dot.Visible = true
+                local scale = (halfSize - 10) / minimapRange
+                local forward = myLook
+                local right = myLook:Cross(Vector3.new(0, 1, 0)).Unit
+                local x = rel:Dot(right) * scale
+                local y = -rel:Dot(forward) * scale
+                local color = (getColorFor(plr))
+                dot.BackgroundColor3 = color
+                dot.Position = UDim2.new(0.5, x - 5, 0.5, y - 5)
+            end
+        end
+    end
+end
+
+Window:AddToggle(VisualTab, {
+    Title = "Mini Mapa",
+    Description = "Mostra jogadores proximos num radar",
+    Default = false,
+    Callback = function(v)
+        minimapEnabled = v
+        if v then
+            createMinimap()
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LP then getOrCreateDot(plr) end
+            end
+        else
+            if minimapFrame then
+                minimapFrame:Destroy()
+                minimapFrame = nil
+            end
+            minimapDots = {}
+        end
+    end,
+})
+
+Window:AddSlider(VisualTab, {
+    Title = "Mini Mapa Range",
+    Min = 100, Max = 2000, Default = 500,
+    Callback = function(v) minimapRange = v end,
+})
+
+Players.PlayerAdded:Connect(function(plr)
+    if minimapEnabled and plr ~= LP then getOrCreateDot(plr) end
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+    if minimapDots[plr] then
+        minimapDots[plr]:Destroy()
+        minimapDots[plr] = nil
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if minimapEnabled then pcall(updateMinimap) end
+end)
+
 -- ============================================================
 -- AUTOFARM
 -- ============================================================
@@ -3136,7 +3074,6 @@ local farmStartTime = 0
 local farmLoop = nil
 local noclipFarm = nil
 local targetCoinType = "Coin"
-local farmOnlyMyCoins = false
 
 local farmStatusLabel = new("TextLabel", {
     Size = UDim2.new(1, 0, 0, 60),
@@ -3150,10 +3087,6 @@ local farmStatusLabel = new("TextLabel", {
     Parent = FarmTab.Page,
 })
 corner(farmStatusLabel, 8)
-
-local function setFarmStatus(txt)
-    farmStatusLabel.Text = txt
-end
 
 local function getCoinContainer()
     for _, obj in ipairs(workspace:GetChildren()) do
@@ -3170,7 +3103,6 @@ local function findNearestCoin()
     if not container then return nil end
     local myRoot = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
     if not myRoot then return nil end
-
     local closest, closestDist = nil, math.huge
     for _, coin in ipairs(container:GetChildren()) do
         if coin:GetAttribute("CoinID") == targetCoinType and coin:FindFirstChild("TouchInterest") then
@@ -3208,46 +3140,41 @@ local function startFarm()
     if farmLoop then return end
     farmStartTime = tick()
     startFarmNoclip()
-
     farmLoop = task.spawn(function()
         local collected = 0
         while isFarming do
             task.wait(0.1)
             local myChar = LP.Character
             local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            local hum = myChar and myChar:FindFirstChildOfClass("Humanoid")
-            if not myRoot or not hum then
-                setFarmStatus("Status: Aguardando respawn...\nMoedas: " .. collected)
+            if not myRoot then
+                farmStatusLabel.Text = "Status: Aguardando respawn...\nMoedas: " .. collected
                 task.wait(0.5)
-                continue
-            end
-
-            local coin = findNearestCoin()
-            if coin then
-                local targetPos = coin.Position
-                -- Teleporta até a moeda
-                pcall(function()
-                    myRoot.CFrame = CFrame.new(targetPos)
-                end)
-                task.wait(0.05)
-                collected = collected + 1
-                local elapsed = tick() - farmStartTime
-                local perHour = elapsed > 0 and math.floor((collected / elapsed) * 3600) or 0
-                setFarmStatus(string.format(
-                    "Status: Farmando ⚡\nMoedas: %d | %.0f/h",
-                    collected, perHour
-                ))
             else
-                local elapsed = tick() - farmStartTime
-                local perHour = elapsed > 0 and math.floor((collected / elapsed) * 3600) or 0
-                setFarmStatus(string.format(
-                    "Status: Procurando...\nMoedas: %d | %.0f/h",
-                    collected, perHour
-                ))
-                task.wait(0.3)
+                local coin = findNearestCoin()
+                if coin then
+                    pcall(function()
+                        myRoot.CFrame = CFrame.new(coin.Position)
+                    end)
+                    task.wait(0.05)
+                    collected = collected + 1
+                    local elapsed = tick() - farmStartTime
+                    local perHour = elapsed > 0 and math.floor((collected / elapsed) * 3600) or 0
+                    farmStatusLabel.Text = string.format(
+                        "Status: Farmando ⚡\nMoedas: %d | %d/h",
+                        collected, perHour
+                    )
+                else
+                    local elapsed = tick() - farmStartTime
+                    local perHour = elapsed > 0 and math.floor((collected / elapsed) * 3600) or 0
+                    farmStatusLabel.Text = string.format(
+                        "Status: Procurando...\nMoedas: %d | %d/h",
+                        collected, perHour
+                    )
+                    task.wait(0.3)
+                end
             end
         end
-        setFarmStatus("Status: Desligado\nMoedas: 0")
+        farmStatusLabel.Text = "Status: Desligado\nMoedas: 0"
     end)
 end
 
@@ -3262,7 +3189,7 @@ end
 
 Window:AddToggle(FarmTab, {
     Title = "Farm Coins",
-    Description = "Farm automático com teleporte (Noclip incluso)",
+    Description = "Farm automatico com teleporte",
     Default = false,
     Callback = function(v)
         isFarming = v
@@ -3272,65 +3199,14 @@ Window:AddToggle(FarmTab, {
 
 Window:AddDropdown(FarmTab, {
     Title = "Coin Type",
-    Description = "Tipo de moeda pra farmar",
+    Description = "Tipo de moeda",
     Options = { "Coin", "Gem", "Coin1", "Coin2", "Candy" },
     Default = "Coin",
     Callback = function(v) targetCoinType = v end,
 })
 
 -- ============================================================
--- AÇÕES QUANDO BAG CHEIA
--- ============================================================
-Window:AddSection(FarmTab, "Quando Bag Cheia")
-
-local resetOnFull = false
-local flingOnFull = false
-local shootOnFull = false
-local killAllOnFull = false
-
-Window:AddToggle(FarmTab, {
-    Title = "Reset (Innocent)",
-    Description = "Reseta o personagem quando o bag encher",
-    Default = false,
-    Callback = function(v) resetOnFull = v end,
-})
-
-Window:AddToggle(FarmTab, {
-    Title = "Fling Murderer",
-    Description = "Arremessa o Murderer quando o bag encher",
-    Default = false,
-    Callback = function(v) flingOnFull = v end,
-})
-
-Window:AddToggle(FarmTab, {
-    Title = "Shoot Murderer (Sheriff)",
-    Description = "Atira no Murderer quando o bag encher",
-    Default = false,
-    Callback = function(v) shootOnFull = v end,
-})
-
-Window:AddToggle(FarmTab, {
-    Title = "Kill All (Murderer)",
-    Description = "Mata todos quando o bag encher",
-    Default = false,
-    Callback = function(v) killAllOnFull = v end,
-})
-
-task.spawn(function()
-    while task.wait(1) do
-        if isFarming and LP.Character then
-            local hum = LP.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                local bag = LP:FindFirstChild("leaderstats") and LP.leaderstats:FindFirstChild("Coins")
-                -- Tentativa de detectar bag cheio por parâmetro do jogo
-                -- Placeholder: usuário precisa adaptar
-            end
-        end
-    end
-end)
-
--- ============================================================
--- BOTÃO FLUTUANTE ABRIR/FECHAR MENU
+-- BOTAO FLUTUANTE ABRIR/FECHAR
 -- ============================================================
 local ToggleBtn = new("TextButton", {
     Name = "MenuToggle",
@@ -3365,17 +3241,12 @@ CloseBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- PANIC BUTTON FINAL (desliga tudo de uma vez)
+-- PANIC FINAL
 -- ============================================================
 _G.ToddynhoPanic = function()
-    -- Desliga variáveis principais
     if stopFarm then pcall(stopFarm) end
     if disableVoidHide then pcall(disableVoidHide) end
     if disableMagicBullet then pcall(disableMagicBullet) end
-    if disableSilentAim then pcall(disableSilentAim) end
-    if disableAimbot then pcall(disableAimbot) end
-    if clearAura then pcall(clearAura) end
-    -- Fecha todas as funções de ESP
     if espData then
         for _, data in pairs(espData) do
             for _, obj in pairs(data) do
@@ -3384,10 +3255,13 @@ _G.ToddynhoPanic = function()
             end
         end
     end
+    if minimapFrame then
+        minimapFrame.Visible = false
+    end
 end
 
 -- ============================================================
 -- MENSAGEM FINAL
 -- ============================================================
 task.wait(0.5)
-Window:Notify("Toddynhohub 2.01", "Script carregado 🟣 | Panic: END", 5)
+Window:Notify("Toddynhohub 2.01", "Carregado 🟣 | Panic: END", 5)
