@@ -1,7 +1,7 @@
 --[[
     ============================================================
     TODDYNHOHUB 2.01 - MM2 Style
-    Tema: Dark Roxo 🟣
+    Tema: Spatial Purple 🟣
     ============================================================
 ]]
 
@@ -17,20 +17,44 @@ local Stats = game:GetService("Stats")
 local HttpService = game:GetService("HttpService")
 local LP = Players.LocalPlayer
 
+-- ============================================================
+-- TEMA
+-- ============================================================
 local Theme = {
-    BG        = Color3.fromRGB(18, 12, 28),
-    Surface   = Color3.fromRGB(28, 20, 42),
-    Surface2  = Color3.fromRGB(40, 28, 60),
-    Accent    = Color3.fromRGB(160, 80, 255),
-    AccentDim = Color3.fromRGB(110, 55, 180),
-    Text      = Color3.fromRGB(240, 235, 255),
-    TextDim   = Color3.fromRGB(165, 150, 195),
-    Outline   = Color3.fromRGB(65, 45, 100),
-    Green     = Color3.fromRGB(90, 220, 130),
-    Red       = Color3.fromRGB(255, 90, 90),
-    Yellow    = Color3.fromRGB(255, 215, 80),
+    BG           = Color3.fromRGB(10, 4, 22),
+    BG2          = Color3.fromRGB(20, 8, 40),
+    Surface      = Color3.fromRGB(22, 14, 44),
+    Surface2     = Color3.fromRGB(32, 20, 60),
+    Surface3     = Color3.fromRGB(40, 26, 74),
+    Accent       = Color3.fromRGB(160, 80, 255),
+    AccentLight  = Color3.fromRGB(200, 140, 255),
+    AccentNeon   = Color3.fromRGB(210, 150, 255),
+    AccentDark   = Color3.fromRGB(90, 40, 160),
+    Glow         = Color3.fromRGB(120, 40, 220),
+    Text         = Color3.fromRGB(240, 235, 255),
+    TextDim      = Color3.fromRGB(160, 145, 200),
+    Outline      = Color3.fromRGB(80, 50, 140),
+    Green        = Color3.fromRGB(90, 220, 130),
+    Red          = Color3.fromRGB(255, 90, 90),
+    Yellow       = Color3.fromRGB(255, 215, 80),
 }
 
+local BG_IMAGE_ID = "rbxassetid://73420438007535"
+
+-- ============================================================
+-- ICONES
+-- ============================================================
+local Icons = {
+    Combat = "⚔", LocalPlayer = "◉", AutoFarm = "◎", Visuals = "◈", Settings = "⚙",
+    Murder = "⚔", Innocent = "☗", Sheriff = "✦", Target = "◉", User = "☺",
+    Gun = "◎", Eye = "◉", Sword = "⚔", Shield = "☗", Star = "✦",
+    Crosshair = "◉", Money = "◈", Sparkle = "✧", Gear = "⚙", Key = "⌨",
+    Clean = "✧",
+}
+
+-- ============================================================
+-- HELPERS
+-- ============================================================
 local function new(class, props, children)
     local obj = Instance.new(class)
     for k, v in pairs(props or {}) do obj[k] = v end
@@ -51,6 +75,17 @@ local function stroke(parent, color, thickness)
     })
 end
 
+local function addGradient(frame, c1, c2, rotation)
+    return new("UIGradient", {
+        Color = ColorSequence.new(c1 or Theme.Accent, c2 or Theme.AccentDark),
+        Rotation = rotation or 90,
+        Parent = frame,
+    })
+end
+
+-- ============================================================
+-- SCREEN GUI
+-- ============================================================
 local ScreenGui = new("ScreenGui", {
     Name = "ToddynhoHub201",
     ResetOnSpawn = false,
@@ -58,15 +93,18 @@ local ScreenGui = new("ScreenGui", {
     Parent = (gethui and gethui()) or game:GetService("CoreGui"),
 })
 
+-- ============================================================
+-- JANELA
+-- ============================================================
 local Window = {}
 Window.Tabs = {}
 Window.ActiveTab = nil
 
 local viewport = workspace.CurrentCamera.ViewportSize
 local isSmall = viewport.X < 700
-local winW = isSmall and math.min(viewport.X - 30, 500) or 580
-local winH = isSmall and math.min(viewport.Y - 80, 380) or 400
-local tabW = isSmall and 95 or 130
+local winW = isSmall and math.min(viewport.X - 25, 520) or 620
+local winH = isSmall and math.min(viewport.Y - 80, 400) or 420
+local tabW = isSmall and 110 or 150
 
 local MainFrame = new("Frame", {
     Name = "MainFrame",
@@ -78,94 +116,158 @@ local MainFrame = new("Frame", {
     ClipsDescendants = true,
     Parent = ScreenGui,
 })
-corner(MainFrame, 12)
-stroke(MainFrame, Theme.Accent, 2)
+corner(MainFrame, 14)
 
-local TitleBar = new("Frame", {
-    Name = "TitleBar",
-    Size = UDim2.new(1, 0, 0, 36),
-    BackgroundColor3 = Theme.Surface,
-    BorderSizePixel = 0,
+-- Glow duplo neon
+new("UIStroke", {
+    Color = Theme.Glow,
+    Thickness = 7,
+    Transparency = 0.7,
+    ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
     Parent = MainFrame,
 })
-corner(TitleBar, 12)
+new("UIStroke", {
+    Color = Theme.AccentNeon,
+    Thickness = 1.5,
+    ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+    Parent = MainFrame,
+})
 
-new("TextLabel", {
-    Size = UDim2.new(1, -100, 1, 0),
-    Position = UDim2.fromOffset(14, 0),
+-- Imagem de fundo (buraco negro)
+local BgImage = new("ImageLabel", {
+    Name = "BgImage",
+    Size = UDim2.fromScale(1, 1),
     BackgroundTransparency = 1,
-    Text = "🟣 Toddynhohub 2.01",
-    TextColor3 = Theme.Text,
-    TextSize = 15,
+    Image = BG_IMAGE_ID,
+    ImageTransparency = 0.15,
+    ScaleType = Enum.ScaleType.Crop,
+    ZIndex = 0,
+    Parent = MainFrame,
+})
+corner(BgImage, 14)
+
+-- Overlay escuro pra melhorar leitura dos textos
+local BgOverlay = new("Frame", {
+    Name = "BgOverlay",
+    Size = UDim2.fromScale(1, 1),
+    BackgroundColor3 = Theme.BG,
+    BackgroundTransparency = 0.55,
+    BorderSizePixel = 0,
+    ZIndex = 0,
+    Parent = MainFrame,
+})
+corner(BgOverlay, 14)
+
+-- Estrelinhas decorativas
+for i = 1, 25 do
+    local star = new("Frame", {
+        Size = UDim2.fromOffset(math.random(1, 3), math.random(1, 3)),
+        Position = UDim2.new(math.random(), 0, math.random(), 0),
+        BackgroundColor3 = Theme.AccentLight,
+        BackgroundTransparency = math.random(40, 85) / 100,
+        BorderSizePixel = 0,
+        ZIndex = 1,
+        Parent = MainFrame,
+    })
+    corner(star, 4)
+end
+
+-- ============================================================
+-- TITLE BAR
+-- ============================================================
+local TitleBar = new("Frame", {
+    Name = "TitleBar",
+    Size = UDim2.new(1, 0, 0, 44),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    ZIndex = 2,
+    Parent = MainFrame,
+})
+
+-- Título roxo neon (sem círculo)
+local TitleLabel = new("TextLabel", {
+    Size = UDim2.new(1, -80, 1, 0),
+    Position = UDim2.fromOffset(20, 0),
+    BackgroundTransparency = 1,
+    Text = "Toddynho 2.01",
+    TextColor3 = Theme.AccentNeon,
+    TextSize = 20,
     Font = Enum.Font.GothamBold,
     TextXAlignment = Enum.TextXAlignment.Left,
+    ZIndex = 3,
     Parent = TitleBar,
+})
+new("UIStroke", {
+    Color = Theme.AccentDark,
+    Thickness = 1.5,
+    ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
+    Parent = TitleLabel,
 })
 
 local CloseBtn = new("TextButton", {
-    Size = UDim2.fromOffset(28, 28),
-    Position = UDim2.new(1, -36, 0, 4),
+    Size = UDim2.fromOffset(30, 30),
+    Position = UDim2.new(1, -42, 0.5, -15),
     BackgroundColor3 = Theme.Surface2,
-    Text = "×",
+    Text = "✕",
     TextColor3 = Theme.Text,
-    TextSize = 18,
+    TextSize = 16,
     Font = Enum.Font.GothamBold,
     BorderSizePixel = 0,
+    AutoButtonColor = false,
+    ZIndex = 3,
     Parent = TitleBar,
 })
-corner(CloseBtn, 6)
+corner(CloseBtn, 8)
 
-local MinBtn = new("TextButton", {
-    Size = UDim2.fromOffset(28, 28),
-    Position = UDim2.new(1, -70, 0, 4),
-    BackgroundColor3 = Theme.Surface2,
-    Text = "—",
-    TextColor3 = Theme.Text,
-    TextSize = 14,
-    Font = Enum.Font.GothamBold,
-    BorderSizePixel = 0,
-    Parent = TitleBar,
-})
-corner(MinBtn, 6)
-
-local minimized = false
-MinBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    MainFrame.Size = minimized and UDim2.fromOffset(winW, 36) or UDim2.fromOffset(winW, winH)
+CloseBtn.MouseEnter:Connect(function()
+    CloseBtn.BackgroundColor3 = Theme.Red
+end)
+CloseBtn.MouseLeave:Connect(function()
+    CloseBtn.BackgroundColor3 = Theme.Surface2
 end)
 
+-- ============================================================
+-- TAB BAR
+-- ============================================================
 local TabBar = new("Frame", {
     Name = "TabBar",
-    Size = UDim2.new(0, tabW, 1, -46),
-    Position = UDim2.fromOffset(6, 42),
+    Size = UDim2.new(0, tabW, 1, -58),
+    Position = UDim2.fromOffset(8, 50),
     BackgroundColor3 = Theme.Surface,
+    BackgroundTransparency = 0.35,
     BorderSizePixel = 0,
+    ZIndex = 2,
     Parent = MainFrame,
 })
-corner(TabBar, 10)
+corner(TabBar, 12)
 
 new("UIListLayout", {
-    Padding = UDim.new(0, 4),
+    Padding = UDim.new(0, 6),
     SortOrder = Enum.SortOrder.LayoutOrder,
     Parent = TabBar,
 })
 
 new("UIPadding", {
-    PaddingTop = UDim.new(0, 6),
-    PaddingLeft = UDim.new(0, 6),
-    PaddingRight = UDim.new(0, 6),
+    PaddingTop = UDim.new(0, 8),
+    PaddingLeft = UDim.new(0, 8),
+    PaddingRight = UDim.new(0, 8),
     Parent = TabBar,
 })
 
+-- ============================================================
+-- CONTENT
+-- ============================================================
 local Content = new("Frame", {
     Name = "Content",
-    Size = UDim2.new(1, -(tabW + 12), 1, -52),
-    Position = UDim2.fromOffset(tabW + 6, 46),
+    Size = UDim2.new(1, -(tabW + 24), 1, -62),
+    Position = UDim2.fromOffset(tabW + 16, 54),
     BackgroundTransparency = 1,
     ClipsDescendants = true,
+    ZIndex = 2,
     Parent = MainFrame,
 })
 
+-- Drag da janela
 do
     local dragging, dragStart, startPos
     TitleBar.InputBegan:Connect(function(input)
@@ -276,19 +378,20 @@ new("Frame", {
     Parent = Watermark,
 })
 
+local wmDot = Watermark:FindFirstChildOfClass("Frame")
+if wmDot then corner(wmDot, 4) end
+
 local wmText = new("TextLabel", {
     Size = UDim2.new(1, -30, 1, 0),
     Position = UDim2.fromOffset(24, 0),
     BackgroundTransparency = 1,
-    Text = "🟣 Toddynhohub 2.01 | -- FPS",
+    Text = "Toddynho 2.01 | -- FPS",
     TextColor3 = Theme.Text,
     TextSize = 12,
     Font = Enum.Font.GothamMedium,
     TextXAlignment = Enum.TextXAlignment.Left,
     Parent = Watermark,
 })
-
-corner(Watermark:FindFirstChildOfClass("Frame"), 4)
 
 task.spawn(function()
     local frames, lastUpdate = 0, tick()
@@ -298,7 +401,7 @@ task.spawn(function()
             local fps = frames
             frames = 0
             lastUpdate = tick()
-            wmText.Text = string.format("🟣 Toddynhohub 2.01 | %d FPS", fps)
+            wmText.Text = string.format("Toddynho 2.01 | %d FPS", fps)
         end
     end)
 end)
@@ -308,9 +411,10 @@ end)
 -- ============================================================
 function Window:AddTab(name, icon)
     local btn = new("TextButton", {
-        Size = UDim2.new(1, 0, 0, 34),
+        Size = UDim2.new(1, 0, 0, 40),
         BackgroundColor3 = Theme.Surface2,
-        Text = "  " .. name,
+        BackgroundTransparency = 0.3,
+        Text = "",
         TextColor3 = Theme.TextDim,
         TextSize = 13,
         Font = Enum.Font.GothamMedium,
@@ -318,7 +422,30 @@ function Window:AddTab(name, icon)
         AutoButtonColor = false,
         Parent = TabBar,
     })
-    corner(btn, 6)
+    corner(btn, 8)
+
+    local btnIcon = new("TextLabel", {
+        Size = UDim2.fromOffset(30, 30),
+        Position = UDim2.new(0, 8, 0.5, -15),
+        BackgroundTransparency = 1,
+        Text = icon or "",
+        TextColor3 = Theme.TextDim,
+        TextSize = 18,
+        Font = Enum.Font.GothamBold,
+        Parent = btn,
+    })
+
+    local btnText = new("TextLabel", {
+        Size = UDim2.new(1, -46, 1, 0),
+        Position = UDim2.fromOffset(44, 0),
+        BackgroundTransparency = 1,
+        Text = name,
+        TextColor3 = Theme.TextDim,
+        TextSize = 13,
+        Font = Enum.Font.GothamMedium,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = btn,
+    })
 
     local page = new("ScrollingFrame", {
         Size = UDim2.fromScale(1, 1),
@@ -341,7 +468,7 @@ function Window:AddTab(name, icon)
         Parent = page,
     })
 
-    local tab = { Button = btn, Page = page, Name = name }
+    local tab = { Button = btn, Page = page, Name = name, Icon = btnIcon, Text = btnText }
 
     btn.MouseButton1Click:Connect(function()
         Window:SelectTab(tab)
@@ -358,21 +485,39 @@ function Window:SelectTab(tab)
         local active = (t == tab)
         t.Page.Visible = active
         t.Button.BackgroundColor3 = active and Theme.Accent or Theme.Surface2
-        t.Button.TextColor3 = active and Theme.Text or Theme.TextDim
+        t.Button.BackgroundTransparency = active and 0 or 0.3
+        t.Icon.TextColor3 = active and Theme.Text or Theme.TextDim
+        t.Text.TextColor3 = active and Theme.Text or Theme.TextDim
     end
 end
 
 -- ============================================================
--- ADD SECTION
+-- ADD SECTION (com linha divisoria e icone)
 -- ============================================================
-function Window:AddSection(tab, name)
+function Window:AddSection(tab, name, icon)
     local f = new("Frame", {
         Size = UDim2.new(1, 0, 0, 26),
         BackgroundTransparency = 1,
         Parent = tab.Page,
     })
-    new("TextLabel", {
-        Size = UDim2.fromScale(1, 1),
+
+    if icon then
+        new("TextLabel", {
+            Size = UDim2.fromOffset(24, 24),
+            Position = UDim2.fromOffset(0, 1),
+            BackgroundTransparency = 1,
+            Text = icon,
+            TextColor3 = Theme.Accent,
+            TextSize = 16,
+            Font = Enum.Font.GothamBold,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = f,
+        })
+    end
+
+    local title = new("TextLabel", {
+        Size = UDim2.new(0, 200, 1, 0),
+        Position = UDim2.fromOffset(icon and 26 or 0, 0),
         BackgroundTransparency = 1,
         Text = name:upper(),
         TextColor3 = Theme.Accent,
@@ -381,10 +526,21 @@ function Window:AddSection(tab, name)
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = f,
     })
+
+    -- Linha divisoria com gradiente
+    local line = new("Frame", {
+        Size = UDim2.new(1, -(icon and 226 or 200), 1, 0),
+        Position = UDim2.new(0, icon and 226 or 200, 0, 0),
+        BackgroundColor3 = Theme.Accent,
+        BackgroundTransparency = 0.7,
+        BorderSizePixel = 0,
+        Parent = f,
+    })
+    addGradient(line, Theme.Accent, Theme.Surface, 0)
 end
 
 -- ============================================================
--- ADD TOGGLE
+-- ADD TOGGLE (pill estilo imagem)
 -- ============================================================
 function Window:AddToggle(tab, opts)
     local title = opts.Title or "Toggle"
@@ -392,27 +548,29 @@ function Window:AddToggle(tab, opts)
     local callback = opts.Callback or function() end
 
     local holder = new("Frame", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 50),
         BackgroundColor3 = Theme.Surface,
+        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
         Parent = tab.Page,
     })
-    corner(holder, 8)
+    corner(holder, 10)
+    stroke(holder, Theme.Outline, 1)
 
     new("TextLabel", {
-        Size = UDim2.new(1, -70, 0, 20),
-        Position = UDim2.fromOffset(12, 5),
+        Size = UDim2.new(1, -80, 0, 22),
+        Position = UDim2.fromOffset(14, 6),
         BackgroundTransparency = 1,
         Text = title,
         TextColor3 = Theme.Text,
-        TextSize = 13,
+        TextSize = 14,
         Font = Enum.Font.GothamMedium,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = holder,
     })
     new("TextLabel", {
-        Size = UDim2.new(1, -70, 0, 14),
-        Position = UDim2.fromOffset(12, 24),
+        Size = UDim2.new(1, -80, 0, 16),
+        Position = UDim2.fromOffset(14, 28),
         BackgroundTransparency = 1,
         Text = opts.Description or "",
         TextColor3 = Theme.TextDim,
@@ -424,18 +582,22 @@ function Window:AddToggle(tab, opts)
     })
 
     local switchBg = new("Frame", {
-        Size = UDim2.fromOffset(44, 22),
-        Position = UDim2.new(1, -56, 0.5, -11),
+        Size = UDim2.fromOffset(48, 24),
+        Position = UDim2.new(1, -62, 0.5, -12),
         BackgroundColor3 = default and Theme.Accent or Theme.Surface2,
         BorderSizePixel = 0,
         Parent = holder,
     })
-    corner(switchBg, 11)
+    corner(switchBg, 12)
+
+    if default then
+        stroke(switchBg, Theme.AccentNeon, 1)
+    end
 
     local knob = new("Frame", {
         Size = UDim2.fromOffset(18, 18),
-        Position = default and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9),
-        BackgroundColor3 = Theme.Text,
+        Position = default and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9),
+        BackgroundColor3 = Color3.new(1, 1, 1),
         BorderSizePixel = 0,
         Parent = switchBg,
     })
@@ -455,7 +617,7 @@ function Window:AddToggle(tab, opts)
             BackgroundColor3 = v and Theme.Accent or Theme.Surface2,
         }):Play()
         TweenService:Create(knob, TweenInfo.new(0.15), {
-            Position = v and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9),
+            Position = v and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9),
         }):Play()
         pcall(callback, v)
     end
@@ -474,23 +636,27 @@ function Window:AddButton(tab, opts)
     local callback = opts.Callback or function() end
 
     local btn = new("TextButton", {
-        Size = UDim2.new(1, 0, 0, 36),
+        Size = UDim2.new(1, 0, 0, 40),
         BackgroundColor3 = Theme.Surface,
+        BackgroundTransparency = 0.2,
         Text = title,
         TextColor3 = Theme.Text,
-        TextSize = 13,
+        TextSize = 14,
         Font = Enum.Font.GothamMedium,
         BorderSizePixel = 0,
         AutoButtonColor = false,
         Parent = tab.Page,
     })
-    corner(btn, 8)
+    corner(btn, 10)
+    stroke(btn, Theme.Outline, 1)
 
     btn.MouseEnter:Connect(function()
         btn.BackgroundColor3 = Theme.Surface2
+        btn.BackgroundTransparency = 0
     end)
     btn.MouseLeave:Connect(function()
         btn.BackgroundColor3 = Theme.Surface
+        btn.BackgroundTransparency = 0.2
     end)
     btn.MouseButton1Click:Connect(function()
         pcall(callback)
@@ -508,16 +674,18 @@ function Window:AddSlider(tab, opts)
     local callback = opts.Callback or function() end
 
     local holder = new("Frame", {
-        Size = UDim2.new(1, 0, 0, 56),
+        Size = UDim2.new(1, 0, 0, 60),
         BackgroundColor3 = Theme.Surface,
+        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
         Parent = tab.Page,
     })
-    corner(holder, 8)
+    corner(holder, 10)
+    stroke(holder, Theme.Outline, 1)
 
     local label = new("TextLabel", {
-        Size = UDim2.new(1, -16, 0, 20),
-        Position = UDim2.fromOffset(12, 5),
+        Size = UDim2.new(1, -16, 0, 22),
+        Position = UDim2.fromOffset(14, 6),
         BackgroundTransparency = 1,
         Text = title .. ": " .. tostring(default),
         TextColor3 = Theme.Text,
@@ -528,8 +696,8 @@ function Window:AddSlider(tab, opts)
     })
 
     local barBg = new("Frame", {
-        Size = UDim2.new(1, -24, 0, 8),
-        Position = UDim2.new(0, 12, 1, -22),
+        Size = UDim2.new(1, -28, 0, 8),
+        Position = UDim2.new(0, 14, 1, -22),
         BackgroundColor3 = Theme.Surface2,
         BorderSizePixel = 0,
         Parent = holder,
@@ -543,6 +711,7 @@ function Window:AddSlider(tab, opts)
         Parent = barBg,
     })
     corner(fill, 4)
+    addGradient(fill, Theme.AccentNeon, Theme.Accent, 0)
 
     local dragBtn = new("TextButton", {
         Size = UDim2.fromScale(1, 3),
@@ -603,23 +772,25 @@ function Window:AddDropdown(tab, opts)
     local callback = opts.Callback or function() end
 
     local holder = new("Frame", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 50),
         BackgroundColor3 = Theme.Surface,
+        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
         ClipsDescendants = true,
         Parent = tab.Page,
     })
-    corner(holder, 8)
+    corner(holder, 10)
+    stroke(holder, Theme.Outline, 1)
 
     local header = new("TextButton", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 50),
         BackgroundTransparency = 1,
         Text = "",
         Parent = holder,
     })
     new("TextLabel", {
-        Size = UDim2.new(1, -60, 0, 20),
-        Position = UDim2.fromOffset(12, 5),
+        Size = UDim2.new(1, -60, 0, 22),
+        Position = UDim2.fromOffset(14, 6),
         BackgroundTransparency = 1,
         Text = title,
         TextColor3 = Theme.Text,
@@ -630,7 +801,7 @@ function Window:AddDropdown(tab, opts)
     })
     local valueLabel = new("TextLabel", {
         Size = UDim2.new(1, -60, 0, 16),
-        Position = UDim2.fromOffset(12, 23),
+        Position = UDim2.fromOffset(14, 28),
         BackgroundTransparency = 1,
         Text = opts.Default or "Selecione...",
         TextColor3 = Theme.TextDim,
@@ -641,7 +812,7 @@ function Window:AddDropdown(tab, opts)
     })
     new("TextLabel", {
         Size = UDim2.fromOffset(20, 20),
-        Position = UDim2.new(1, -30, 0, 12),
+        Position = UDim2.new(1, -32, 0.5, -10),
         BackgroundTransparency = 1,
         Text = "v",
         TextColor3 = Theme.TextDim,
@@ -652,7 +823,7 @@ function Window:AddDropdown(tab, opts)
 
     local list = new("Frame", {
         Size = UDim2.new(1, 0, 0, 0),
-        Position = UDim2.fromOffset(0, 44),
+        Position = UDim2.fromOffset(0, 50),
         BackgroundColor3 = Theme.Surface2,
         BorderSizePixel = 0,
         Parent = holder,
@@ -686,13 +857,20 @@ function Window:AddDropdown(tab, opts)
                 TextSize = 12,
                 Font = Enum.Font.Gotham,
                 BorderSizePixel = 0,
+                AutoButtonColor = false,
                 Parent = list,
             })
             corner(ob, 6)
+            ob.MouseEnter:Connect(function()
+                ob.BackgroundColor3 = Theme.Accent
+            end)
+            ob.MouseLeave:Connect(function()
+                ob.BackgroundColor3 = Theme.Surface
+            end)
             ob.MouseButton1Click:Connect(function()
                 valueLabel.Text = tostring(opt)
                 expanded = false
-                holder.Size = UDim2.new(1, 0, 0, 44)
+                holder.Size = UDim2.new(1, 0, 0, 50)
                 list.Size = UDim2.new(1, 0, 0, 0)
                 pcall(callback, opt)
             end)
@@ -704,10 +882,10 @@ function Window:AddDropdown(tab, opts)
         expanded = not expanded
         if expanded then
             local h = math.min(#options * 28 + 8, 200)
-            holder.Size = UDim2.new(1, 0, 0, 44 + h)
+            holder.Size = UDim2.new(1, 0, 0, 50 + h)
             list.Size = UDim2.new(1, 0, 0, h)
         else
-            holder.Size = UDim2.new(1, 0, 0, 44)
+            holder.Size = UDim2.new(1, 0, 0, 50)
             list.Size = UDim2.new(1, 0, 0, 0)
         end
     end)
@@ -715,6 +893,7 @@ function Window:AddDropdown(tab, opts)
     refresh(options)
     return { Refresh = refresh }
 end
+
 -- ============================================================
 -- ADD COLOR PICKER
 -- ============================================================
@@ -724,16 +903,18 @@ function Window:AddColorPicker(tab, opts)
     local callback = opts.Callback or function() end
 
     local holder = new("Frame", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 50),
         BackgroundColor3 = Theme.Surface,
+        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
         Parent = tab.Page,
     })
-    corner(holder, 8)
+    corner(holder, 10)
+    stroke(holder, Theme.Outline, 1)
 
     new("TextLabel", {
-        Size = UDim2.new(1, -70, 1, 0),
-        Position = UDim2.fromOffset(12, 0),
+        Size = UDim2.new(1, -80, 1, 0),
+        Position = UDim2.fromOffset(14, 0),
         BackgroundTransparency = 1,
         Text = title,
         TextColor3 = Theme.Text,
@@ -744,13 +925,13 @@ function Window:AddColorPicker(tab, opts)
     })
 
     local swatch = new("Frame", {
-        Size = UDim2.fromOffset(40, 24),
-        Position = UDim2.new(1, -52, 0.5, -12),
+        Size = UDim2.fromOffset(42, 26),
+        Position = UDim2.new(1, -56, 0.5, -13),
         BackgroundColor3 = default,
         BorderSizePixel = 0,
         Parent = holder,
     })
-    corner(swatch, 6)
+    corner(swatch, 7)
     stroke(swatch, Theme.Outline, 1)
 
     local pickerBtn = new("TextButton", {
@@ -796,16 +977,18 @@ function Window:AddKeybind(tab, opts)
     local callback = opts.Callback or function() end
 
     local holder = new("Frame", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 46),
         BackgroundColor3 = Theme.Surface,
+        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
         Parent = tab.Page,
     })
-    corner(holder, 8)
+    corner(holder, 10)
+    stroke(holder, Theme.Outline, 1)
 
     new("TextLabel", {
-        Size = UDim2.new(1, -100, 1, 0),
-        Position = UDim2.fromOffset(12, 0),
+        Size = UDim2.new(1, -110, 1, 0),
+        Position = UDim2.fromOffset(14, 0),
         BackgroundTransparency = 1,
         Text = title,
         TextColor3 = Theme.Text,
@@ -816,8 +999,8 @@ function Window:AddKeybind(tab, opts)
     })
 
     local keyBtn = new("TextButton", {
-        Size = UDim2.fromOffset(80, 26),
-        Position = UDim2.new(1, -90, 0.5, -13),
+        Size = UDim2.fromOffset(84, 28),
+        Position = UDim2.new(1, -94, 0.5, -14),
         BackgroundColor3 = Theme.Surface2,
         Text = default == Enum.KeyCode.Unknown and "Nenhuma" or default.Name,
         TextColor3 = Theme.Text,
@@ -827,7 +1010,7 @@ function Window:AddKeybind(tab, opts)
         AutoButtonColor = false,
         Parent = holder,
     })
-    corner(keyBtn, 6)
+    corner(keyBtn, 7)
 
     local currentKey = default
     local listening = false
@@ -835,7 +1018,7 @@ function Window:AddKeybind(tab, opts)
     keyBtn.MouseButton1Click:Connect(function()
         if listening then return end
         listening = true
-        keyBtn.Text = "Pressione..."
+        keyBtn.Text = "..."
         keyBtn.BackgroundColor3 = Theme.Accent
     end)
 
@@ -868,34 +1051,18 @@ function Window:AddKeybind(tab, opts)
         end,
     }
 end
-
 -- ============================================================
--- SAVE / LOAD CONFIG
+-- SAVE / LOAD CONFIG (silencioso no autosave)
 -- ============================================================
 local CONFIG_FILE = "Toddynho201_Config.json"
 local ConfigRegistry = {}
-_G.ToddynhoConfigRegistry = ConfigRegistry
 
-local function serializeColor(c)
-    if typeof(c) == "Color3" then
-        return { c.R * 255, c.G * 255, c.B * 255 }
-    end
-    return nil
-end
-
-local function deserializeColor(t)
-    if type(t) == "table" and #t >= 3 then
-        return Color3.fromRGB(t[1], t[2], t[3])
-    end
-    return nil
-end
-
-local function saveConfig()
+local function saveConfig(silent)
     local data = {}
     for key, entry in pairs(ConfigRegistry) do
         local val = entry.getter and entry.getter()
         if typeof(val) == "Color3" then
-            data[key] = { __color = serializeColor(val) }
+            data[key] = { __color = { val.R * 255, val.G * 255, val.B * 255 } }
         else
             data[key] = { value = val }
         end
@@ -903,12 +1070,10 @@ local function saveConfig()
     local ok, encoded = pcall(function()
         return HttpService:JSONEncode(data)
     end)
-    if ok then
-        if writefile then
-            pcall(function() writefile(CONFIG_FILE, encoded) end)
+    if ok and writefile then
+        pcall(function() writefile(CONFIG_FILE, encoded) end)
+        if not silent then
             Window:Notify("Config", "Salvo ✅", 2)
-        else
-            Window:Notify("Config", "Sem suporte a writefile", 2)
         end
     end
 end
@@ -922,11 +1087,14 @@ local function loadConfig()
     if not ok then return end
     local ok2, data = pcall(function() return HttpService:JSONDecode(content) end)
     if not ok2 or not data then return end
+
     for key, entry in pairs(data) do
         local reg = ConfigRegistry[key]
         if reg and reg.setter then
             local v = entry.value
-            if entry.__color then v = deserializeColor(entry.__color) end
+            if entry.__color and type(entry.__color) == "table" and #entry.__color >= 3 then
+                v = Color3.fromRGB(entry.__color[1], entry.__color[2], entry.__color[3])
+            end
             if v ~= nil then pcall(reg.setter, v) end
         end
     end
@@ -941,29 +1109,30 @@ _G.ToddynhoRegisterConfig = registerConfig
 _G.ToddynhoSaveConfig = saveConfig
 _G.ToddynhoLoadConfig = loadConfig
 
+-- Autosave silencioso a cada 30s
 task.spawn(function()
     while task.wait(30) do
-        pcall(saveConfig)
+        pcall(function() saveConfig(true) end)
     end
 end)
 
 -- ============================================================
 -- CRIA AS ABAS
 -- ============================================================
-local CombatTab = Window:AddTab("Combat")
-local LocalTab = Window:AddTab("LocalPlayer")
-local FarmTab = Window:AddTab("AutoFarm")
-local VisualTab = Window:AddTab("Visuals")
-local SettingsTab = Window:AddTab("Settings")
+local CombatTab = Window:AddTab("Combat", Icons.Combat)
+local LocalTab = Window:AddTab("LocalPlayer", Icons.User)
+local FarmTab = Window:AddTab("AutoFarm", Icons.Money)
+local VisualTab = Window:AddTab("Visuals", Icons.Eye)
+local SettingsTab = Window:AddTab("Settings", Icons.Gear)
 
 -- ============================================================
 -- SETTINGS TAB
 -- ============================================================
-Window:AddSection(SettingsTab, "Configuracoes")
+Window:AddSection(SettingsTab, "Configuracoes", Icons.Gear)
 
 Window:AddButton(SettingsTab, {
     Title = "Salvar Config",
-    Callback = function() saveConfig() end,
+    Callback = function() saveConfig(false) end,
 })
 
 Window:AddButton(SettingsTab, {
@@ -981,12 +1150,13 @@ Window:AddButton(SettingsTab, {
     end,
 })
 
-Window:AddSection(SettingsTab, "Informacoes")
+Window:AddSection(SettingsTab, "Informacoes", Icons.Star)
 
 local InfoLabel = new("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 60),
+    Size = UDim2.new(1, 0, 0, 70),
     BackgroundColor3 = Theme.Surface,
-    Text = "🟣 Toddynhohub 2.01\nFeito por wandinhozin-ship-it\nPanic Key: End",
+    BackgroundTransparency = 0.2,
+    Text = "Toddynhohub 2.01\nFeito por wandinhozin-ship-it\nPanic Key: End",
     TextColor3 = Theme.Text,
     TextSize = 12,
     Font = Enum.Font.Gotham,
@@ -994,18 +1164,9 @@ local InfoLabel = new("TextLabel", {
     BorderSizePixel = 0,
     Parent = SettingsTab.Page,
 })
-corner(InfoLabel, 8)
+corner(InfoLabel, 10)
+stroke(InfoLabel, Theme.Outline, 1)
 
--- ============================================================
--- PANIC BUTTON (tecla END)
--- ============================================================
-UIS.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    if input.KeyCode == Enum.KeyCode.End then
-        if _G.ToddynhoPanic then pcall(_G.ToddynhoPanic) end
-        Window:Notify("PANIC", "Funcoes desligadas", 3)
-    end
-end)
 -- ============================================================
 -- ROLE TRACKING
 -- ============================================================
@@ -1098,10 +1259,18 @@ local function stabPlayer(target)
     return ok
 end
 
+local function getPlayerList()
+    local list = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LP then table.insert(list, plr.Name) end
+    end
+    if #list == 0 then list = { "Nenhum jogador" } end
+    return list
+end
 -- ============================================================
 -- MURDER FUNCTIONS
 -- ============================================================
-Window:AddSection(CombatTab, "Murder Functions")
+Window:AddSection(CombatTab, "Murder Functions", Icons.Murder)
 
 local autoKillAll = false
 
@@ -1114,7 +1283,6 @@ Window:AddToggle(CombatTab, {
 
 Window:AddButton(CombatTab, {
     Title = "Kill All",
-    Description = "Mata todos os jogadores de uma vez",
     Callback = function()
         if not isMurderer() then
             Window:Notify("Erro", "Voce precisa ser o Murderer!", 2)
@@ -1134,15 +1302,6 @@ Window:AddButton(CombatTab, {
         Window:Notify("Kill All", "Tentou matar " .. count .. " jogadores", 2)
     end,
 })
-
-local function getPlayerList()
-    local list = {}
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LP then table.insert(list, plr.Name) end
-    end
-    if #list == 0 then list = { "Nenhum jogador" } end
-    return list
-end
 
 local killDropdown = Window:AddDropdown(CombatTab, {
     Title = "Kill Selected Player",
@@ -1196,9 +1355,60 @@ task.spawn(function()
 end)
 
 -- ============================================================
+-- KILL AURA
+-- ============================================================
+local killAuraOn = false
+local killAuraRadius = 8
+
+Window:AddToggle(CombatTab, {
+    Title = "Kill Aura",
+    Description = "Equipa a faca e mata qualquer jogador perto",
+    Default = false,
+    Callback = function(v) killAuraOn = v end,
+})
+
+Window:AddSlider(CombatTab, {
+    Title = "Kill Aura Radius",
+    Min = 5, Max = 20, Default = 8,
+    Callback = function(v) killAuraRadius = v end,
+})
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if killAuraOn and isMurderer() then
+            local char = LP.Character
+            local myRoot = char and char:FindFirstChild("HumanoidRootPart")
+            if myRoot then
+                local knife = getKnife()
+                if knife then
+                    for _, plr in ipairs(Players:GetPlayers()) do
+                        if plr ~= LP and plr.Character then
+                            local head = plr.Character:FindFirstChild("Head")
+                            local theirRoot = plr.Character:FindFirstChild("HumanoidRootPart")
+                            if head and theirRoot then
+                                local dist = (myRoot.Position - theirRoot.Position).Magnitude
+                                if dist <= killAuraRadius then
+                                    local events = knife:FindFirstChild("Events")
+                                    if events then
+                                        pcall(function()
+                                            events.KnifeStabbed:FireServer()
+                                            events.HandleTouched:FireServer(head)
+                                        end)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ============================================================
 -- INNOCENT FUNCTIONS
 -- ============================================================
-Window:AddSection(CombatTab, "Innocent Functions")
+Window:AddSection(CombatTab, "Innocent Functions", Icons.Innocent)
 
 local autoGrabGun = false
 local grabLoopRunning = false
@@ -1279,7 +1489,7 @@ end)
 -- ============================================================
 -- SHERIFF FUNCTIONS
 -- ============================================================
-Window:AddSection(CombatTab, "Sheriff Functions")
+Window:AddSection(CombatTab, "Sheriff Functions", Icons.Sheriff)
 
 local function getPing()
     local ok, val = pcall(function()
@@ -1302,9 +1512,6 @@ local function predictPosition(rootPart, multiplier)
     end
 end
 
--- ============================================================
--- AUTO SHOOT MURDERER
--- ============================================================
 local autoShoot = false
 local predictionMult = 2.5
 
@@ -1466,7 +1673,7 @@ Window:AddToggle(CombatTab, {
 -- ============================================================
 -- SILENT AIM
 -- ============================================================
-Window:AddSection(CombatTab, "Silent Aim")
+Window:AddSection(CombatTab, "Silent Aim", Icons.Target)
 
 local silentAimOn = false
 local silentAimTarget = "Murderer"
@@ -1537,7 +1744,6 @@ Window:AddToggle(CombatTab, {
 
 Window:AddDropdown(CombatTab, {
     Title = "Silent Aim Target",
-    Description = "Quem mirar",
     Options = { "Murderer", "Sheriff", "Todos" },
     Default = "Murderer",
     Callback = function(v) silentAimTarget = v end,
@@ -1554,10 +1760,11 @@ Window:AddSlider(CombatTab, {
     Min = 0, Max = 10, Default = 3,
     Callback = function(v) silentAimPrediction = v end,
 })
+
 -- ============================================================
 -- AIMBOT
 -- ============================================================
-Window:AddSection(CombatTab, "Aimbot")
+Window:AddSection(CombatTab, "Aimbot", Icons.Crosshair)
 
 local aimbotOn = false
 local aimbotKey = Enum.KeyCode.E
@@ -1609,7 +1816,7 @@ Window:AddKeybind(CombatTab, {
 -- ============================================================
 -- FLING
 -- ============================================================
-Window:AddSection(CombatTab, "Fling")
+Window:AddSection(CombatTab, "Fling", Icons.Sparkle)
 
 local flingActive = false
 local flingTarget = nil
@@ -1652,7 +1859,6 @@ end
 
 local flingDropdown = Window:AddDropdown(CombatTab, {
     Title = "Fling Target",
-    Description = "Jogador para arremessar",
     Options = getPlayerList(),
     Default = "Selecione...",
     Callback = function(v)
@@ -1663,7 +1869,6 @@ local flingDropdown = Window:AddDropdown(CombatTab, {
 
 Window:AddButton(CombatTab, {
     Title = "Fling Selected",
-    Description = "Arremessa o jogador selecionado",
     Callback = function()
         if not flingTarget or not flingTarget.Character then
             Window:Notify("Erro", "Selecione um jogador valido", 2)
@@ -1688,7 +1893,7 @@ end)
 -- ============================================================
 -- NOCLIP
 -- ============================================================
-Window:AddSection(CombatTab, "Noclip")
+Window:AddSection(CombatTab, "Noclip", Icons.Eye)
 
 local noclipEnabled = false
 local noclipConn = nil
@@ -1737,7 +1942,7 @@ Window:AddKeybind(CombatTab, {
 -- ============================================================
 -- SERVER HOP
 -- ============================================================
-Window:AddSection(CombatTab, "Server Hop")
+Window:AddSection(CombatTab, "Server Hop", Icons.Star)
 
 local function serverHop()
     local placeId = game.PlaceId
@@ -1778,14 +1983,13 @@ end
 
 Window:AddButton(CombatTab, {
     Title = "Server Hop",
-    Description = "Troca pra outro servidor aleatorio",
     Callback = serverHop,
 })
 
 -- ============================================================
 -- PREDICTION BEAM
 -- ============================================================
-Window:AddSection(CombatTab, "Prediction Beam")
+Window:AddSection(CombatTab, "Prediction Beam", Icons.Target)
 
 local showPrediction = false
 local beamParts = nil
@@ -1865,7 +2069,7 @@ Window:AddToggle(CombatTab, {
 -- ============================================================
 -- LOCALPLAYER - ANTI-FLING
 -- ============================================================
-Window:AddSection(LocalTab, "Anti-Fling")
+Window:AddSection(LocalTab, "Anti-Fling", Icons.Shield)
 
 local antiFlingOn = false
 
@@ -1925,7 +2129,7 @@ Window:AddToggle(LocalTab, {
 -- ============================================================
 -- VOID HIDE
 -- ============================================================
-Window:AddSection(LocalTab, "Void Hide")
+Window:AddSection(LocalTab, "Void Hide", Icons.Eye)
 
 local VoidHide = {
     Enabled = false,
@@ -2079,7 +2283,7 @@ end)
 -- ============================================================
 -- CHARACTER MODIFIERS
 -- ============================================================
-Window:AddSection(LocalTab, "Character Modifiers")
+Window:AddSection(LocalTab, "Character Modifiers", Icons.Star)
 
 local wsEnabled = false
 local wsValue = 16
@@ -2203,10 +2407,11 @@ LP.CharacterAdded:Connect(function()
     if jpEnabled then applyJumpPower() end
     if fovEnabled then applyFOV() end
 end)
+
 -- ============================================================
--- VISUALS - AURAS MELHORADAS
+-- AURAS MELHORADAS
 -- ============================================================
-Window:AddSection(VisualTab, "Character Aura")
+Window:AddSection(VisualTab, "Character Aura", Icons.Sparkle)
 
 local auraEnabled = false
 local selectedAuras = {}
@@ -2214,7 +2419,6 @@ local auraTemplates = {}
 local auraParts = {}
 local auraColorOverride = nil
 local auraTransparency = 0.5
-local auraSize = 1
 
 local AURA_ASSETS = {
     starlight = "rbxassetid://134645216613107",
@@ -2234,8 +2438,6 @@ task.spawn(function()
         end)
         if ok and obj then
             auraTemplates[name] = obj
-        else
-            warn("Falha ao carregar aura:", name)
         end
     end
 end)
@@ -2263,15 +2465,11 @@ local function createAura(char)
     if not auraEnabled or not char then return end
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return end
-    local count = 0
-    for _ in pairs(selectedAuras) do count = count + 1 end
-    if count == 0 then return end
     for name, enabled in pairs(selectedAuras) do
         if enabled and auraTemplates[name] then
             local template = auraTemplates[name]
             local clone = template:Clone()
-            local children = clone:GetChildren()
-            for _, child in ipairs(children) do
+            for _, child in ipairs(clone:GetChildren()) do
                 local target = char:FindFirstChild(child.Name)
                 if target then
                     for _, sub in ipairs(child:GetChildren()) do
@@ -2330,24 +2528,14 @@ Window:AddSlider(VisualTab, {
     end,
 })
 
-Window:AddSlider(VisualTab, {
-    Title = "Aura Size",
-    Min = 1, Max = 5, Default = 1,
-    Callback = function(v)
-        auraSize = v
-        if auraEnabled then createAura(LP.Character) end
-    end,
-})
-
 LP.CharacterAdded:Connect(function(char)
     task.wait(1)
     if auraEnabled then createAura(char) end
 end)
-
 -- ============================================================
--- VISUALS - KILL EFFECT MELHORADO
+-- KILL EFFECT
 -- ============================================================
-Window:AddSection(VisualTab, "Kill Effect")
+Window:AddSection(VisualTab, "Kill Effect", Icons.Sword)
 
 local killEffectEnabled = false
 local killEffectColor = Color3.fromRGB(160, 80, 255)
@@ -2419,9 +2607,7 @@ local function freezeCharacter(char, cf)
             end
         elseif d:IsA("SpecialMesh") then
             d.TextureId = ""
-        elseif d:IsA("Decal") then
-            d:Destroy()
-        elseif d:IsA("Texture") then
+        elseif d:IsA("Decal") or d:IsA("Texture") then
             d:Destroy()
         elseif d:IsA("Script") or d:IsA("LocalScript") or d:IsA("ModuleScript") then
             d:Destroy()
@@ -2522,7 +2708,6 @@ Window:AddToggle(VisualTab, {
 
 Window:AddDropdown(VisualTab, {
     Title = "Kill Effect Type",
-    Description = "Estilo do efeito",
     Options = { "Neon", "Fogo", "Gelo", "Raio", "Ouro" },
     Default = "Neon",
     Callback = function(v) killEffectType = v end,
@@ -2530,14 +2715,12 @@ Window:AddDropdown(VisualTab, {
 
 Window:AddToggle(VisualTab, {
     Title = "Kill Effect Particles",
-    Description = "Adiciona particulas (fogo/brilho)",
     Default = false,
     Callback = function(v) killEffectParticles = v end,
 })
 
 Window:AddColorPicker(VisualTab, {
     Title = "Kill Effect Color",
-    Description = "Cor do efeito (Neon)",
     Default = Color3.fromRGB(160, 80, 255),
     Callback = function(c) killEffectColor = c end,
 })
@@ -2545,24 +2728,17 @@ Window:AddColorPicker(VisualTab, {
 Players.PlayerAdded:Connect(function(plr)
     if killEffectEnabled then setupKillEffectFor(plr) end
 end)
+
 -- ============================================================
--- VISUALS - ESP MELHORADO
+-- ESP
 -- ============================================================
-Window:AddSection(VisualTab, "ESP")
+Window:AddSection(VisualTab, "ESP", Icons.Eye)
 
 local ESP = {
-    Enabled = false,
-    ShowBox = true,
-    ShowName = true,
-    ShowRole = true,
-    ShowDistance = true,
-    ShowHealth = false,
-    ShowHealthBar = true,
-    ShowTracer = false,
-    ShowChams = false,
-    MaxDistance = 500,
-    TeamCheck = false,
-    TextSize = 14,
+    Enabled = false, ShowBox = true, ShowName = true, ShowRole = true,
+    ShowDistance = true, ShowHealth = false, ShowHealthBar = true,
+    ShowTracer = false, ShowChams = false, MaxDistance = 500,
+    TeamCheck = false, TextSize = 14,
 }
 
 local ROLE_COLORS = {
@@ -2603,8 +2779,7 @@ end
 local drawingSupported = pcall(function() return Drawing.new("Square") end)
 
 local function createESP(plr)
-    if espData[plr] then return end
-    if not drawingSupported then return end
+    if espData[plr] or not drawingSupported then return end
     ensureHolder()
 
     local data = {}
@@ -2693,7 +2868,7 @@ local function destroyESP(plr)
     espData[plr] = nil
 end
 
-local function hideAll(data)
+local function hideAllESP(data)
     for _, obj in pairs(data) do
         if typeof(obj) == "Drawing" then obj.Visible = false
         elseif typeof(obj) == "Instance" and obj:IsA("Highlight") then obj.Enabled = false end
@@ -2727,7 +2902,7 @@ local function updateESP()
         end
 
         if not shouldShow then
-            hideAll(data)
+            hideAllESP(data)
             continue
         end
 
@@ -2748,7 +2923,7 @@ local function updateESP()
         local bottomPos = Vector2.new(bottomScreen.X, bottomScreen.Y)
 
         if topScreen.Z < 0 or bottomScreen.Z < 0 then
-            hideAll(data)
+            hideAllESP(data)
             continue
         end
 
@@ -2769,14 +2944,13 @@ local function updateESP()
 
         if ESP.ShowHealthBar then
             local hpPct = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
-            local barW = 3
             data.HealthBarBg.Visible = true
-            data.HealthBarBg.Size = Vector2.new(barW, height)
+            data.HealthBarBg.Size = Vector2.new(3, height)
             data.HealthBarBg.Position = Vector2.new(centerX - width / 2 - 6, boxTop)
 
             data.HealthBarFill.Visible = true
             data.HealthBarFill.Color = Color3.fromRGB(255 * (1 - hpPct), 255 * hpPct, 0)
-            data.HealthBarFill.Size = Vector2.new(barW, height * hpPct)
+            data.HealthBarFill.Size = Vector2.new(3, height * hpPct)
             data.HealthBarFill.Position = Vector2.new(centerX - width / 2 - 6, boxBottom - height * hpPct)
         else
             data.HealthBarBg.Visible = false
@@ -2830,9 +3004,7 @@ local function trackPlayerForESP(plr)
     end)
 end
 
-for _, plr in ipairs(Players:GetPlayers()) do
-    trackPlayerForESP(plr)
-end
+for _, plr in ipairs(Players:GetPlayers()) do trackPlayerForESP(plr) end
 Players.PlayerAdded:Connect(trackPlayerForESP)
 Players.PlayerRemoving:Connect(destroyESP)
 
@@ -2843,73 +3015,20 @@ Window:AddToggle(VisualTab, {
     Callback = function(v)
         ESP.Enabled = v
         if not v then
-            for _, data in pairs(espData) do hideAll(data) end
+            for _, data in pairs(espData) do hideAllESP(data) end
         end
     end,
 })
 
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Box",
-    Description = "Caixa ao redor do jogador",
-    Default = true,
-    Callback = function(v) ESP.ShowBox = v end,
-})
-
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Health Bar",
-    Description = "Barra de vida lateral",
-    Default = true,
-    Callback = function(v) ESP.ShowHealthBar = v end,
-})
-
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Name",
-    Description = "Nome do jogador",
-    Default = true,
-    Callback = function(v) ESP.ShowName = v end,
-})
-
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Role",
-    Description = "Role do jogador",
-    Default = true,
-    Callback = function(v) ESP.ShowRole = v end,
-})
-
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Distance",
-    Description = "Distancia em metros",
-    Default = true,
-    Callback = function(v) ESP.ShowDistance = v end,
-})
-
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Health (texto)",
-    Description = "Texto com vida",
-    Default = false,
-    Callback = function(v) ESP.ShowHealth = v end,
-})
-
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Tracer",
-    Description = "Linha ate o jogador",
-    Default = false,
-    Callback = function(v) ESP.ShowTracer = v end,
-})
-
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Chams",
-    Description = "Preenche o personagem com a cor da role",
-    Default = false,
-    Callback = function(v) ESP.ShowChams = v end,
-})
-
-Window:AddToggle(VisualTab, {
-    Title = "ESP: Team Check",
-    Description = "Esconde jogadores do mesmo time",
-    Default = false,
-    Callback = function(v) ESP.TeamCheck = v end,
-})
+Window:AddToggle(VisualTab, { Title = "ESP: Box", Default = true, Callback = function(v) ESP.ShowBox = v end })
+Window:AddToggle(VisualTab, { Title = "ESP: Health Bar", Default = true, Callback = function(v) ESP.ShowHealthBar = v end })
+Window:AddToggle(VisualTab, { Title = "ESP: Name", Default = true, Callback = function(v) ESP.ShowName = v end })
+Window:AddToggle(VisualTab, { Title = "ESP: Role", Default = true, Callback = function(v) ESP.ShowRole = v end })
+Window:AddToggle(VisualTab, { Title = "ESP: Distance", Default = true, Callback = function(v) ESP.ShowDistance = v end })
+Window:AddToggle(VisualTab, { Title = "ESP: Health (texto)", Default = false, Callback = function(v) ESP.ShowHealth = v end })
+Window:AddToggle(VisualTab, { Title = "ESP: Tracer", Default = false, Callback = function(v) ESP.ShowTracer = v end })
+Window:AddToggle(VisualTab, { Title = "ESP: Chams", Default = false, Callback = function(v) ESP.ShowChams = v end })
+Window:AddToggle(VisualTab, { Title = "ESP: Team Check", Default = false, Callback = function(v) ESP.TeamCheck = v end })
 
 Window:AddSlider(VisualTab, {
     Title = "ESP Max Distance",
@@ -2930,7 +3049,7 @@ end)
 -- ============================================================
 -- MINI MAPA
 -- ============================================================
-Window:AddSection(VisualTab, "Mini Mapa")
+Window:AddSection(VisualTab, "Mini Mapa", Icons.Target)
 
 local minimapEnabled = false
 local minimapSize = 200
@@ -2954,7 +3073,6 @@ local function createMinimap()
 
     new("TextLabel", {
         Size = UDim2.new(1, 0, 0, 20),
-        Position = UDim2.fromOffset(0, 0),
         BackgroundTransparency = 1,
         Text = "MAPA",
         TextColor3 = Theme.Accent,
@@ -2987,281 +3105,4 @@ local function getOrCreateDot(plr)
     corner(dot, 5)
     minimapDots[plr] = dot
     return dot
-end
-
-local function updateMinimap()
-    if not minimapFrame then return end
-    local myRoot = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return end
-    local centerPos = myRoot.Position
-    local myLook = myRoot.CFrame.LookVector
-    local halfSize = minimapSize / 2
-
-    for plr, dot in pairs(minimapDots) do
-        local char = plr.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if not hrp or plr == LP then
-            dot.Visible = false
-        else
-            local rel = hrp.Position - centerPos
-            local dist = rel.Magnitude
-            if dist > minimapRange then
-                dot.Visible = false
-            else
-                dot.Visible = true
-                local scale = (halfSize - 10) / minimapRange
-                local forward = myLook
-                local right = myLook:Cross(Vector3.new(0, 1, 0)).Unit
-                local x = rel:Dot(right) * scale
-                local y = -rel:Dot(forward) * scale
-                local color = (getColorFor(plr))
-                dot.BackgroundColor3 = color
-                dot.Position = UDim2.new(0.5, x - 5, 0.5, y - 5)
-            end
-        end
-    end
-end
-
-Window:AddToggle(VisualTab, {
-    Title = "Mini Mapa",
-    Description = "Mostra jogadores proximos num radar",
-    Default = false,
-    Callback = function(v)
-        minimapEnabled = v
-        if v then
-            createMinimap()
-            for _, plr in ipairs(Players:GetPlayers()) do
-                if plr ~= LP then getOrCreateDot(plr) end
-            end
-        else
-            if minimapFrame then
-                minimapFrame:Destroy()
-                minimapFrame = nil
-            end
-            minimapDots = {}
-        end
-    end,
-})
-
-Window:AddSlider(VisualTab, {
-    Title = "Mini Mapa Range",
-    Min = 100, Max = 2000, Default = 500,
-    Callback = function(v) minimapRange = v end,
-})
-
-Players.PlayerAdded:Connect(function(plr)
-    if minimapEnabled and plr ~= LP then getOrCreateDot(plr) end
-end)
-
-Players.PlayerRemoving:Connect(function(plr)
-    if minimapDots[plr] then
-        minimapDots[plr]:Destroy()
-        minimapDots[plr] = nil
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if minimapEnabled then pcall(updateMinimap) end
-end)
-
--- ============================================================
--- AUTOFARM
--- ============================================================
-Window:AddSection(FarmTab, "AutoFarm")
-
-local isFarming = false
-local farmStartTime = 0
-local farmLoop = nil
-local noclipFarm = nil
-local targetCoinType = "Coin"
-
-local farmStatusLabel = new("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 60),
-    BackgroundColor3 = Theme.Surface,
-    Text = "Status: Desligado\nMoedas: 0",
-    TextColor3 = Theme.Text,
-    TextSize = 12,
-    Font = Enum.Font.GothamMedium,
-    TextWrapped = true,
-    BorderSizePixel = 0,
-    Parent = FarmTab.Page,
-})
-corner(farmStatusLabel, 8)
-
-local function getCoinContainer()
-    for _, obj in ipairs(workspace:GetChildren()) do
-        if obj:IsA("Model") then
-            local cc = obj:FindFirstChild("CoinContainer")
-            if cc then return cc end
-        end
-    end
-    return nil
-end
-
-local function findNearestCoin()
-    local container = getCoinContainer()
-    if not container then return nil end
-    local myRoot = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return nil end
-    local closest, closestDist = nil, math.huge
-    for _, coin in ipairs(container:GetChildren()) do
-        if coin:GetAttribute("CoinID") == targetCoinType and coin:FindFirstChild("TouchInterest") then
-            local d = (myRoot.Position - coin.Position).Magnitude
-            if d < closestDist then
-                closest, closestDist = coin, d
-            end
-        end
-    end
-    return closest
-end
-
-local function startFarmNoclip()
-    if noclipFarm then return end
-    noclipFarm = RunService.Stepped:Connect(function()
-        if not isFarming then return end
-        local char = LP.Character
-        if not char then return end
-        for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") and p.CanCollide then
-                pcall(function() p.CanCollide = false end)
-            end
-        end
-    end)
-end
-
-local function stopFarmNoclip()
-    if noclipFarm then
-        noclipFarm:Disconnect()
-        noclipFarm = nil
-    end
-end
-
-local function startFarm()
-    if farmLoop then return end
-    farmStartTime = tick()
-    startFarmNoclip()
-    farmLoop = task.spawn(function()
-        local collected = 0
-        while isFarming do
-            task.wait(0.1)
-            local myChar = LP.Character
-            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            if not myRoot then
-                farmStatusLabel.Text = "Status: Aguardando respawn...\nMoedas: " .. collected
-                task.wait(0.5)
-            else
-                local coin = findNearestCoin()
-                if coin then
-                    pcall(function()
-                        myRoot.CFrame = CFrame.new(coin.Position)
-                    end)
-                    task.wait(0.05)
-                    collected = collected + 1
-                    local elapsed = tick() - farmStartTime
-                    local perHour = elapsed > 0 and math.floor((collected / elapsed) * 3600) or 0
-                    farmStatusLabel.Text = string.format(
-                        "Status: Farmando ⚡\nMoedas: %d | %d/h",
-                        collected, perHour
-                    )
-                else
-                    local elapsed = tick() - farmStartTime
-                    local perHour = elapsed > 0 and math.floor((collected / elapsed) * 3600) or 0
-                    farmStatusLabel.Text = string.format(
-                        "Status: Procurando...\nMoedas: %d | %d/h",
-                        collected, perHour
-                    )
-                    task.wait(0.3)
-                end
-            end
-        end
-        farmStatusLabel.Text = "Status: Desligado\nMoedas: 0"
-    end)
-end
-
-local function stopFarm()
-    isFarming = false
-    if farmLoop then
-        task.cancel(farmLoop)
-        farmLoop = nil
-    end
-    stopFarmNoclip()
-end
-
-Window:AddToggle(FarmTab, {
-    Title = "Farm Coins",
-    Description = "Farm automatico com teleporte",
-    Default = false,
-    Callback = function(v)
-        isFarming = v
-        if v then startFarm() else stopFarm() end
-    end,
-})
-
-Window:AddDropdown(FarmTab, {
-    Title = "Coin Type",
-    Description = "Tipo de moeda",
-    Options = { "Coin", "Gem", "Coin1", "Coin2", "Candy" },
-    Default = "Coin",
-    Callback = function(v) targetCoinType = v end,
-})
-
--- ============================================================
--- BOTAO FLUTUANTE ABRIR/FECHAR
--- ============================================================
-local ToggleBtn = new("TextButton", {
-    Name = "MenuToggle",
-    Size = UDim2.fromOffset(56, 56),
-    Position = UDim2.new(0, 15, 0.5, -28),
-    BackgroundColor3 = Theme.Accent,
-    Text = "🟣",
-    TextSize = 26,
-    Font = Enum.Font.GothamBold,
-    TextColor3 = Theme.Text,
-    BorderSizePixel = 0,
-    AutoButtonColor = false,
-    Parent = ScreenGui,
-})
-corner(ToggleBtn, 28)
-stroke(ToggleBtn, Theme.Text, 2)
-
-local menuOpen = true
-
-local function setMenuOpen(v)
-    menuOpen = v
-    MainFrame.Visible = v
-    ToggleBtn.BackgroundColor3 = v and Theme.Accent or Theme.Surface2
-end
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    setMenuOpen(not menuOpen)
-end)
-
-CloseBtn.MouseButton1Click:Connect(function()
-    setMenuOpen(false)
-end)
-
--- ============================================================
--- PANIC FINAL
--- ============================================================
-_G.ToddynhoPanic = function()
-    if stopFarm then pcall(stopFarm) end
-    if disableVoidHide then pcall(disableVoidHide) end
-    if disableMagicBullet then pcall(disableMagicBullet) end
-    if espData then
-        for _, data in pairs(espData) do
-            for _, obj in pairs(data) do
-                if typeof(obj) == "Drawing" then obj.Visible = false
-                elseif typeof(obj) == "Instance" and obj:IsA("Highlight") then obj.Enabled = false end
-            end
-        end
-    end
-    if minimapFrame then
-        minimapFrame.Visible = false
-    end
-end
-
--- ============================================================
--- MENSAGEM FINAL
--- ============================================================
-task.wait(0.5)
-Window:Notify("Toddynhohub 2.01", "Carregado 🟣 | Panic: END", 5)
+e
